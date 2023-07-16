@@ -6,5 +6,11 @@
   "action": {
     "default_popup": "chrome-extension/main.html"
   },
-  "permissions": ["tabs"]
+  "permissions": ["tabs"],
+  "content_scripts": [
+    {
+      "matches": ["pace.fr.carrefour.com/eurofel/webaccess"],
+      "js": ["chrome-extension/main.js"]
+    }
+  ]
 }
