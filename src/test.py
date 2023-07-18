@@ -4,10 +4,9 @@ from openpyxl import load_workbook
 import pandas as pd
 import keyboard
 import time
-"""
+
 browser = webdriver.Chrome()
 browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
-"""
 
 
 file = input("Veuillez saisir nom du fichier: ")
@@ -36,7 +35,7 @@ def waiting_system():
             pass
 def f1_system():
     keyboard.wait("f1")
-while keyboard.is_pressed("f1"):pass
+    while keyboard.is_pressed("f1"):pass
 def f(s):
     if len(s)== 5:s='0'+s
     return s
@@ -52,20 +51,20 @@ def start():
     i=0
     while i<len(L):
         print(f"{i}: {L[i]}")
-        f1_system()
-        #waiting_system()
-        for _ in range(6):keyboard.press("suppr")
+        #f1_system()
+        waiting_system()
+        for _ in range(6):keyboard.press("suppr")#optionnel
         keyboard.write(L[i][0],delay=0.5)
         
         keyboard.press("enter")
-        #waiting_system()
-        f1_system()
-        """
+        waiting_system()
+        #f1_system()
+        
         num = get_first_item()
         print(num)
-        if num==L[i][0]:print("same")
+        if int(num)==int(L[i][0]):print("same")
         else:print("not the same");f1_system()
-        """
+        
         for _ in range(5):keyboard.press('tab')
         
         for _ in range(7):keyboard.press("suppr")
