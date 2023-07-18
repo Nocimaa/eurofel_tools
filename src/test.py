@@ -4,9 +4,11 @@ from openpyxl import load_workbook
 import pandas as pd
 import keyboard
 import time
+from subprocess import CREATE_NO_WINDOW
 
 browser = webdriver.Chrome()
 browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
+browser.creationflags = CREATE_NO_WINDOW
 
 
 file = input("Veuillez saisir nom du fichier: ")
@@ -19,10 +21,20 @@ QUANTITE = df['QUANTITE']
 FOURNISSEUR=df['FOURNISSEUR']
 
 Choix=729
+def close():
+    browser.close()
 def get_first_item():
-    h = browser.execute_script("return document.getElementsByTagName('span');")
-    return h[109].text
+    while True:
+        try:
+            time.sleep(0.25)
+            h = browser.execute_script("return document.getElementsByClassName('NGREEN');")[27]
+            int(h.text)
+            return h.text
+        except:
+            pass
 def waiting_system():
+    keyboard.press('enter')
+    time.sleep(0.2)
     while True:
         time.sleep(0.1)
         try:
@@ -30,16 +42,57 @@ def waiting_system():
             if "X SYSTEM" in h.text:
                 print("X System")
             else:
+                time.sleep(0.1)
                 break
         except:
             pass
+def qp_input(q,p,delay):
+    for _ in range(5):keyboard.press('tab')
+    for _ in range(7):keyboard.press("suppr")
+    keyboard.write(q,delay=delay)
+    for _ in range(2):keyboard.press('tab')
+    for _ in range(10):keyboard.press("suppr")
+    keyboard.write(p,delay=delay)
+
+    #keyboard.press("enter")
+    waiting_system()
+def import_ifls(ifls,delay):
+    keyboard.press("f13")
+    keyboard.press("f6")
+    keyboard.press("tab")
+    keyboard.press("f4")
+    waiting_system()
+    h = browser.execute_script("return document.getElementsByTagName('span');")[42].send_keys(ifls)
+    keyboard.press("enter")
+    for _ in range(9):keyboard.press("tab")
+    time.sleep(0.5)
+    keyboard.write("1")
+    keyboard.press("enter")
+    keyboard.press("enter")
+    keyboard.press("f3")
+    waiting_system()
+    if ifls==get_first_item():
+        print("IFLS imported")
+    else:
+        print("Problem")
+        f1_system()
+def ifls_input(ifls,delay):
+    keyboard.write(ifls,delay=delay)
+    while True:
+        h = browser.execute_script("return document.getElementsByTagName('span');")[73].text
+        if len(h.strip())==6:
+           break
+        time.sleep(0.1)
+    #keyboard.press("enter")
+    waiting_system()
+    if h!=ifls:ifls_input(ifls,delay)
 def f1_system():
     keyboard.wait("f1")
     while keyboard.is_pressed("f1"):pass
 def f(s):
     if len(s)== 5:s='0'+s
     return s
-def start():
+def start(delay):
     fournisseur=input("Saisir lefournisseur: ")
     L=[]
     for i in range(len(IFLS)):
@@ -49,46 +102,26 @@ def start():
     curr=""
     pressed=False
     i=0
+    f1_system()
     while i<len(L):
         print(f"{i}: {L[i]}")
         #f1_system()
         waiting_system()
         for _ in range(6):keyboard.press("suppr")#optionnel
-        keyboard.write(L[i][0],delay=0.5)
+        #keyboard.write(L[i][0],delay=0.5)
         
-        keyboard.press("enter")
-        waiting_system()
-        #f1_system()
-        
-        num = get_first_item()
-        print(num)
-        if int(num)==int(L[i][0]):print("same")
-        else:print("not the same");f1_system()
-        
-        for _ in range(5):keyboard.press('tab')
-        
-        for _ in range(7):keyboard.press("suppr")
-        keyboard.write(f"{L[i][2]}",delay=0.5)
-        for _ in range(2):keyboard.press('tab')
-        for _ in range(10):keyboard.press("suppr")
-        keyboard.write(f"{L[i][1]}",delay=0.5)
-        keyboard.press("enter")
+        ifls_input(L[i][0],delay)
+        if L[i][0]==get_first_item():
+            print("Same")
+        else:
+            print("Not the same")
+            import_ifls(L[i][0],delay)
+        qp_input(str(L[i][2]),str(L[i][1]),delay)
         i+=1
 while True:
-    start()
+    start(0.25)
 print("Fin de processus")
 
 #Recupere le X system (peut crash sur certaine page car pas de sb_status
-"""
-def waiting_system():
-    while True:
-        time.sleep(0.1)
-        try:
-            h = browser.execute_script("return document.getElementById('sb_status');")
-            if "X SYSTEM" in h.text:
-                print(h.text)
-                break
-        except:
-            pass
-"""
-
+def close():
+    browser.close()
