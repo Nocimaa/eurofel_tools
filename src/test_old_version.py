@@ -5,13 +5,11 @@ import pandas as pd
 import keyboard
 import time
 from subprocess import CREATE_NO_WINDOW
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.keys import Keys
 
 browser = webdriver.Chrome()
 browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
 browser.creationflags = CREATE_NO_WINDOW
-action=ActionChains(browser)
+
 
 file = input("Veuillez saisir nom du fichier: ")
 daterecp=input("Veuillez saisir la date de reception (DD/MM/YY): ")
@@ -28,19 +26,9 @@ Choix=input("Selectionner Entrepot")
 Secteur=input("Selectionner Secteur")
 
 def close():browser.close()
-def enter():
-    action.send_keys(Keys.ENTER)
-    action.perform()
-def tab(i):
-    for _ in range(i):action.send_keys(Keys.TAB)
-    action.perform()
-def suppr(i):
-    for _ in range(i):action.send_keys(Keys.DELETE)
-    action.perform()
-def write(text):
-    action.send_keys(text)
-    action.perform()
-    
+def enter():keyboard.press("enter")
+def tab():keyboard.press("tab")
+def suppr():keyboard.press("suppr")
 
 def get_first_item():
     while True:
@@ -88,55 +76,58 @@ def waiting_system():
         except:
             print("ah une erreur")
             time.sleep(1)
-def qp_input(q,p):
-    tab(5)
-    suppr(7)
-    write(q)
-    tab(2)
-    suppr(10)
-    write(p)
-    enter()
+def qp_input(q,p,delay):
+    for _ in range(5):tab()
+    for _ in range(7):suppr()
+    keyboard.write(q,delay=delay)
+    for _ in range(2):tab()
+    for _ in range(10):suppr()
+    keyboard.write(p,delay=delay)
+    keyboard.press("enter")
     waiting_system()
     
 def import_ifls(ifls,delay):
     #f1_system()
-    action.key_down(Keys.SHIFT).send_keys(Keys.F1).key_up(Keys.SHIFT)
-    action.perform()
+    keyboard.press("shift+f1")
     waiting_system()
-    action.send_keys(Keys.F6)
-    action.perform()
+    keyboard.release("shift")
+    keyboard.press("f6")
     waiting_system()
-    action.send_keys(Keys.TAB)
-    action.perform()
+    keyboard.press("tab")
+    keyboard.press("f4")
     waiting_system()
-    action.send_keys(Keys.F4)
-    action.perform()
-    waiting_system()
-    tab(2)
-    write(ifls)
-    enter()
+    for _ in range(2):keyboard.press("tab")
+    keyboard.write(ifls,delay=delay)
+    keyboard.press("enter")
     waiting_system()
     if get_first_imported()!=ifls:return True
-    tab(9)
-    write("1")
-    enter()
+    for _ in range(9):keyboard.press("tab")
+    keyboard.write("1",delay=delay)
+    keyboard.press("enter")
     waiting_system()
-    enter()
+    keyboard.press("enter")
     waiting_system()
-    action.send_keys(Keys.F3)
-    action.perform()
+    keyboard.press("f3")
+    waiting_system()
     if ifls!=get_first_item():
         print("Product Not imported")
         return True
     else:
         print("Product Imported")
         return False
-def ifls_input(ifls):
-    #f1_system()
-    suppr(6)
-    write(ifls)
-    enter()
+def ifls_input(ifls,delay):
+    keyboard.write(ifls,delay=delay)
+    while True:
+        h = browser.execute_script("return document.getElementsByTagName('span');")[73].text
+        if len(h.strip())==6:
+           break
+        time.sleep(0.1)
+    keyboard.press("enter")
     waiting_system()
+    if h!=ifls:
+        print("incorrect ifls")
+        #f1_system()
+        ifls_input(ifls,delay)
 def f1_system():
     keyboard.wait("f1")
     while keyboard.is_pressed("f1"):pass
@@ -150,42 +141,45 @@ def start(delay,L):
     i=0
     #f1_system()
     while i<len(L):
-        print(f"{i}: {L[i]}")
-        #f1_system()
-        waiting_system()
-        for _ in range(6):keyboard.press("suppr")#optionnel
-            
-        ifls_input(L[i][0])
-        if L[i][0]==get_first_item():
-            print("Same")
-        else:
-            print("Not the same")
+        try:
+            print(f"{i}: {L[i]}")
             #f1_system()
-            if import_ifls(L[i][0],delay):
-                new_ifls=input("New ifls: ")
-                L[i][0]=f(new_ifls)
-                f1_system()
-                continue
-        qp_input(str(L[i][2]),str(L[i][1]))
-        i+=1
+            waiting_system()
+            for _ in range(6):keyboard.press("suppr")#optionnel
+            
+            ifls_input(L[i][0],delay)
+            if L[i][0]==get_first_item():
+                print("Same")
+            else:
+                print("Not the same")
+                #f1_system()
+                if import_ifls(L[i][0],delay):
+                    new_ifls=input("New ifls: ")
+                    L[i][0]=f(new_ifls)
+                    f1_system()
+                    continue
+            qp_input(str(L[i][2]),str(L[i][1]),delay)
+            i+=1
+        except:
+            print("Process Interuted")
+            f1_system()
 def init(L,delay):
     #f1_system()
-    action.send_keys(Keys.F6)
-    action.perform()
+    keyboard.press("F6")
     waiting_system()
-    tab(1)
-    write(L[0][3])
-    if len(L[0][3])<=5:tab(1)
-    suppr(8)
-    write(daterecp.replace("/",""))
-    tab(2)
-    write(Secteur)
-    enter()
+    keyboard.press("tab")
+    keyboard.write(fourniformat(L[0][3]),delay=delay)
+    if len(L[0][3])<=5:keyboard.press("tab")
+    for _ in range(8):keyboard.press("suppr")
+    keyboard.write(daterecp.replace("/",""),delay=delay)
+    keyboard.press("tab")
+    keyboard.press("tab")
+    keyboard.write(str(Secteur),delay=delay)
+    keyboard.press("enter")
     waiting_system()
-    enter()
+    keyboard.press("enter")
     waiting_system()
-    action.send_keys(Keys.F6)
-    action.perform()
+    keyboard.press("F6")
     waiting_system()
 delay=0.2
 f1_system() 
