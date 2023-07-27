@@ -11,10 +11,16 @@ class Procedure():
         self.browser = browser
         self.excel = excel
 
-        self.entrepot="175"
-        self.secteur="2"
-        self.date="270723"
+        self.start=False
+
+
+        self.entrepot=None
+        self.secteur=None
+        self.date=None
         self.fournisseurs_set=set()
+
+        self.pas=0
+        self.ps=0
 
 
         self.ifls = self.excel['IFLS']
@@ -54,3 +60,4 @@ class Procedure():
             if self.entrepots[i]==self.entrepot:
                 self.L.append([self.ifls[i],self.prix[i],self.quantite[i],self.fournisseurs[i]])
                 self.fournisseurs_set.add((self.fournisseurs[i],self.code[i]))
+        self.pas=len(self.L)

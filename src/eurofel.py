@@ -75,23 +75,13 @@ class MainFrame(customtkinter.CTkFrame):
         super().__init__(master,**kwargs)
         self.master=master
         self.p = Procedure(master.browser,master.excel)
-
-        """        
+     
         self.f1 = customtkinter.CTkFrame(master)
         self.lab=customtkinter.CTkLabel(self.f1,text="Connectez-vous à un entrepot\nAller sur GESTION DES COMMANDES D'ACHATS\n(01->02->07)\nPuis appuyez sur configurer.").pack(side="top",pady=(25,25))
         self.but=customtkinter.CTkButton(self.f1,text="Configurer",width=150,height=40,command=lambda :self.configure()).pack()
         self.lab2=customtkinter.CTkLabel(self.f1,text_color="red",text="").pack(side="bottom")
 
         self.f1.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
-        """
-        self.f2 = customtkinter.CTkFrame(master)
-
-        self.el=customtkinter.CTkLabel(self.f2,text=f"Entrepot: {self.p.entrepot}").pack(side="left",padx=(75,75))
-        self.sl=customtkinter.CTkLabel(self.f2,text=f"Secteur: {self.p.entrepot}").pack(side="right",padx=(75,75))
-        self.sl=customtkinter.CTkLabel(self.f2,text=f"Date: {self.p.date[:2]}/{self.p.date[2:4]}/{self.p.date[4:]}").pack(padx=(75,75))
-
-
-        self.f2.pack(pady=(25,25))
 
 
     def configure(self):
@@ -102,15 +92,48 @@ class MainFrame(customtkinter.CTkFrame):
             self.f1.winfo_children()[-1].configuree(text="Impossible de charger la date sur l'excel.")
             return
         self.p.create_list()
+        self.switch()
     def clear_frame(self):
         for el in self.master.winfo_children():
             el.destroy()
         self.destroy()
+
+    def switch(self):
+        self.f1.destroy()
+
+        self.f2 = customtkinter.CTkFrame(self.master)
+        self.el=customtkinter.CTkLabel(self.f2,text=f"Entrepot: {self.p.entrepot}").pack(side="left",padx=(75,75))
+        self.sl=customtkinter.CTkLabel(self.f2,text=f"Secteur: {self.p.secteur}").pack(side="right",padx=(75,75))
+        self.sl=customtkinter.CTkLabel(self.f2,text=f"Date: {self.p.date[:2]}/{self.p.date[2:4]}/{self.p.date[4:]}").pack(padx=(75,75))
+        self.f2.pack(pady=(25,25))
+
+        
+        self.f3= customtkinter.CTkFrame(self.master)
+        self.el=customtkinter.CTkLabel(self.f3,text=f"Produit à saisir: {self.p.pas}").pack(side="left",padx=(75,75))
+        self.sl=customtkinter.CTkLabel(self.f3,text=f"Produit saisie: {self.p.ps}").pack(padx=(75,75))
+        self.f3.pack(pady=(25,25))
+
+        self.but = customtkinter.CTkButton(self.master,text="Démarrer",command=lambda :self.get_start())
+        self.but.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
+
+        self.pb=customtkinter.CTkProgressBar(self.master,width=600,height=25)
+        self.pb.set(0)
+        self.pb.place(relx=0.5,rely=0.8,anchor=tkinter.CENTER)
+
+    def get_start(self):
+        if self.p.start:
+            self.but.configure(text="Démarrer")
+            self.p.start=False
+        else:
+            self.but.configure(text="Arreter")
+            self.p.start=True
+
 #Main Windows
 class MainWindow(customtkinter.CTk):
     def __init__(self):
         super().__init__()
         self.geometry("800x400")
+        customtkinter.set_appearance_mode("Dark")
         self.title("EuroFel Utility")
         self.browser=None
         self.file=None
@@ -166,8 +189,7 @@ class Test(customtkinter.CTk):
             self.p=None
             self.my_frame = MainFrame(self)   
 
-#App = MainWindow()
-App = Test()
+App = MainWindow()
 App.mainloop()
 App.browser.close()
 
