@@ -1,40 +1,155 @@
+#%%
 import tkinter
 import customtkinter
-import main
-import numpy as np
+from selenium import webdriver
+from bs4 import BeautifulSoup
+from PIL import Image
+from procedure import Procedure
+from pandas import read_excel
 
 
 
+#%%
 #Main Windows
-window = customtkinter.CTk()
-window.title("Eurofel Facility")
-window.geometry("800x400")
+#Frame
+class LaunchFrame(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self.master=master
+        #Chrome Button
+        self.cb=customtkinter.CTkButton(master,text="Launch Chrome",command=lambda :self.master.launchBrowser())
+        self.cb.place(relx=0.25,rely=0.6,anchor=tkinter.CENTER) 
+        #Chrome and Excel Img
+        self.img = [Image.open("img/chrome.ico"),Image.open("img/excel.ico")]
+        
+        self.ci = customtkinter.CTkImage(self.img[0],size=(50,50))
+        self.clc=customtkinter.CTkLabel(master,image=self.ci,text="")
+        self.clc.place(relx=0.25,rely=0.40,anchor=tkinter.CENTER)
+        #Excel Text
+        self.ct = customtkinter.CTkLabel(master,text="Not Launched",text_color="red")
+        self.ct.place(relx=0.25,rely=0.75,anchor=tkinter.CENTER)
+        
+
+        #Excel Button
+        self.eb=customtkinter.CTkButton(master,text="Load Excel",command=lambda :self.master.loadExcel())
+        self.eb.place(relx=0.75,rely=0.6,anchor=tkinter.CENTER)
+        #Excel Image
+        self.ce = customtkinter.CTkImage(self.img[1],size=(50,50))
+        self.cle=customtkinter.CTkLabel(master,image=self.ce,text="")
+        self.cle.place(relx=0.75,rely=0.40,anchor=tkinter.CENTER)
+        #Excel Text
+        self.et = customtkinter.CTkLabel(master,text="Not Loaded",text_color="red")
+        self.et.place(relx=0.75,rely=0.75,anchor=tkinter.CENTER)
+
+    
+        self.verify()
+    def invert_chrome_text(self):
+        try:
+            self.master.browser.current_url
+            self.ct.configure(text="Launched",text_color="green")
+            return True
+        except:
+            self.ct.configure(text_color="red",text="Not Launched")
+            return False
+
+    def invert_excel_text(self):
+        if self.master.file!=None:
+            self.et.configure(text="Loaded",text_color="green")
+        else:
+            self.et.configure(text_color="red",text="Not Loaded")
+        return True
+
+    def verify(self):
+        self.invert_excel_text()
+        self.invert_chrome_text()
+        self.after(1000,self.verify)
+
+    def clear_frame(self):
+        for el in self.master.winfo_children():
+            el.destroy()
+
+class MainFrame(customtkinter.CTkFrame):
+    def __init__(self, master,**kwargs):
+        super().__init__(master,**kwargs)
+        self.master=master
+        self.p = Procedure(master.browser,master.file)
+                
+        self.f1 = customtkinter.CTkFrame(master)
+        self.lab=customtkinter.CTkLabel(self.f1,text="Connectez-vous à un entrepot\nAller sur GESTION DES COMMANDES D'ACHATS\n(01->02->07)\nPuis appuyez sur configurer.").pack(side="top",pady=(25,25))
+        self.but=customtkinter.CTkButton(self.f1,text="Configurer",width=150,height=40).pack()
+        self.lab2=customtkinter.CTkLabel(self.f1,text_color="red",text="").pack(side="south")
+
+        self.f1.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
+    
+    def configure(self):
+        if not self.p.get_Entrepot():
+            self.lab2.configure(text="Impossible de récupérer l'entrepot.")
+            return
+        if not self.p.get_date():
+            self.lab2.configure(text="Impossible de charger la date sur l'excel.")
+            return
+        print("youpi")
+    def clear_frame(self):
+        for el in self.master.winfo_children():
+            el.destroy()
+        self.destroy()
+#Main Windows
+class MainWindow(customtkinter.CTk):
+    def __init__(self):
+        super().__init__()
+        self.geometry("800x400")
+        self.title("EuroFel Utility")
+        self.browser=None
+        self.file=None
+        self.excel=None
+        self.state=[False,False]
+        self.my_frame = LaunchFrame(self)
+
+        self.verify()
+
+    
+    def launchBrowser(self):
+        self.browser=webdriver.Chrome()
+        #self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
+        self.browser.get("https://www.google.com")
+    def loadExcel(self):
+        self.file=tkinter.filedialog.askopenfile(title="Select excel file",initialdir='./',filetypes=(("Excel files", ".xlsx .xls"),))
+        self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str})
+    def verify(self):
+        if isinstance(self.my_frame,LaunchFrame):
+            self.state[0]=self.my_frame.invert_excel_text()
+            self.state[1]=self.my_frame.invert_chrome_text()
+
+        try:self.browser.current_url;self.state[1]=True
+        except:self.state[1]=False
+        
+        self.state[0]=self.file!=None
+
+        if not False in self.state and isinstance(self.my_frame,LaunchFrame):
+            self.my_frame.clear_frame()
+            self.my_frame=MainFrame(self)
+        if False in self.state and isinstance(self.my_frame,MainFrame):self.my_frame=LaunchFrame(self)
+
+        self.after(1000,self.verify)
+
+class Test(customtkinter.CTk):
+    def __init__(self):
+            super().__init__()
+            self.geometry("800x400")
+            self.title("EuroFel Utility")
+            self.browser= webdriver.Chrome()
+            self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
+            self.file="carrefour.fournisseur 270723 FI"
+            self.excel=read_excel(file, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str})
+            self.state=[False,False]
+            self.my_frame = MainFrame(self)
+    
+
+#App = MainWindow()
+App = Test()
+App.mainloop()
 
 
-#global var
-excel=None
-global excel_text
-excel_text = customtkinter.CTkLabel(master=window, text="")
-excel_text.place(relx=0.1, rely=0.25, anchor=tkinter.CENTER)
-def setup_excel():
-    excel = main.load_excel()
-    s = "\n".join(["\t".join([str(ell) for ell in el])     for el in excel])
-    excel_text.configure("feured")
 
 
-#Load Excel Buttons
-load_excel = customtkinter.CTkButton(master=window, text="Load Excel",command=setup_excel)
-load_excel.place(anchor="nw",relx=0.05,rely=0.1)
-
-
-
-
-
-
-window.mainloop()
-
-
-
-
-
-
+# %%
