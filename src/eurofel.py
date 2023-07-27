@@ -88,7 +88,7 @@ class MainFrame(customtkinter.CTkFrame):
 
         self.el=customtkinter.CTkLabel(self.f2,text=f"Entrepot: {self.p.entrepot}").pack(side="left",padx=(75,75))
         self.sl=customtkinter.CTkLabel(self.f2,text=f"Secteur: {self.p.entrepot}").pack(side="right",padx=(75,75))
-        self.sl=customtkinter.CTkLabel(self.f2,text=f"Date: {self.p.date}").pack(padx=(75,75))
+        self.sl=customtkinter.CTkLabel(self.f2,text=f"Date: {self.p.date[:2]}/{self.p.date[2:4]}/{self.p.date[4:]}").pack(padx=(75,75))
 
 
         self.f2.pack(pady=(25,25))
