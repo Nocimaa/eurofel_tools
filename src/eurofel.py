@@ -91,6 +91,7 @@ class MainFrame(customtkinter.CTkFrame):
         if not self.p.get_date():
             self.f1.winfo_children()[-1].configuree(text="Impossible de charger la date sur l'excel.")
             return
+        self.p.get_secteur()
         self.p.create_list()
         self.switch()
     def clear_frame(self):
@@ -104,7 +105,8 @@ class MainFrame(customtkinter.CTkFrame):
         self.f2 = customtkinter.CTkFrame(self.master)
         self.el=customtkinter.CTkLabel(self.f2,text=f"Entrepot: {self.p.entrepot}").pack(side="left",padx=(75,75))
         self.sl=customtkinter.CTkLabel(self.f2,text=f"Secteur: {self.p.secteur}").pack(side="right",padx=(75,75))
-        self.sl=customtkinter.CTkLabel(self.f2,text=f"Date: {self.p.date[:2]}/{self.p.date[2:4]}/{self.p.date[4:]}").pack(padx=(75,75))
+        #self.sl=customtkinter.CTkLabel(self.f2,text=f"Date: {self.p.date[:2]}/{self.p.date[2:4]}/{self.p.date[4:]}").pack(padx=(75,75))
+        self.sl=customtkinter.CTkLabel(self.f2,text=f"Date: {self.p.date}").pack(padx=(75,75))
         self.f2.pack(pady=(25,25))
 
         
@@ -139,7 +141,7 @@ class MainWindow(customtkinter.CTk):
         self.browser=None
         self.file=None
         self.excel=None
-        self.state=[False,False]
+        self.stated=[False,False]
         self.my_frame = LaunchFrame(self)
 
         self.verify()
@@ -149,25 +151,24 @@ class MainWindow(customtkinter.CTk):
         self.service=ChromeService('chromedriver')
         self.service.creation_flags= CREATE_NO_WINDOW
         self.browser= webdriver.Chrome(service=self.service)
-        self.browser= webdriver.Chrome()
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
     def loadExcel(self):
         self.file=tkinter.filedialog.askopenfile(title="Select excel file",initialdir='./',filetypes=(("Excel files", ".xlsx .xls"),))
         self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str})
     def verify(self):
         if isinstance(self.my_frame,LaunchFrame):
-            self.state[0]=self.my_frame.invert_excel_text()
-            self.state[1]=self.my_frame.invert_chrome_text()
+            self.stated[0]=self.my_frame.invert_excel_text()
+            self.stated[1]=self.my_frame.invert_chrome_text()
 
-        try:self.browser.current_url;self.state[1]=True
-        except:self.state[1]=False
+        try:self.browser.current_url;self.stated[1]=True
+        except:self.stated[1]=False
         
-        self.state[0]=self.file!=None
+        self.stated[0]=self.file!=None
 
-        if not False in self.state and isinstance(self.my_frame,LaunchFrame):
+        if not False in self.stated and isinstance(self.my_frame,LaunchFrame):
             self.my_frame.clear_frame()
             self.my_frame=MainFrame(self)
-        if False in self.state and isinstance(self.my_frame,MainFrame):self.my_frame=LaunchFrame(self)
+        if False in self.stated and isinstance(self.my_frame,MainFrame):self.my_frame=LaunchFrame(self)
 
         self.after(1000,self.verify)
 
@@ -188,7 +189,7 @@ class Test(customtkinter.CTk):
 
             self.file="carrefour.fournisseur 270723 FI.xlsx"
             self.excel=read_excel(self.file, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str})
-            self.stateeee=[False,False]
+            self.statee=[False,False]
             self.p=None
             self.my_frame = MainFrame(self)   
 

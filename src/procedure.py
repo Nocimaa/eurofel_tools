@@ -36,12 +36,9 @@ class Procedure():
         try:
             h=self.browser.execute_script("return document.getElementsByClassName('NWHITE')")[0]
             if h.text in ['175','729','774']:
-                print("feured")
                 self.entrepot=h.text
-                print(self.entrepot)
                 return True
-            else:
-                return False
+            else:return False
         except:
             return False
     
