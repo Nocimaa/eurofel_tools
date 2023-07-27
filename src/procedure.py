@@ -30,10 +30,14 @@ class Procedure():
         try:
             h=self.browser.execute_script("return document.getElementsByClassName('NWHITE')")[0]
             if h.text in ['175','729','774']:
+                print("feured")
                 self.entrepot=h.text
+                print(self.entrepot)
                 return True
-        except: pass
-        finally: return False
+            else:
+                return False
+        except:
+            return False
     
     def get_secteur(self):
         if self.entrepot == '175':self.secteur='12'
@@ -43,11 +47,10 @@ class Procedure():
         try:
             self.date=self.excel['DATE'][0]
             return True
-        except:pass
-        finally: return False
+        except:return False
     
     def create_list(self):
         for i in range(len(self.ifls)):
-            if self.entrepots==self.entrepot:
+            if self.entrepots[i]==self.entrepot:
                 self.L.append([self.ifls[i],self.prix[i],self.quantite[i],self.fournisseurs[i]])
                 self.fournisseurs_set.add((self.fournisseurs[i],self.code[i]))

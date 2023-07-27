@@ -24,8 +24,8 @@ QUANTITE = df['QUANTITE']
 FOURNISSEUR=df['FOURNISSEUR']
 fournisseurs=set(FOURNISSEUR)
 
-Choix=input("Selectionner Entrepot")
-Secteur=input("Selectionner Secteur")
+Choix=input("Selectionner Entrepot: ")
+Secteur=input("Selectionner Secteur: ")
 
 def close():browser.close()
 def enter():

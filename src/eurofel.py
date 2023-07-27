@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 from PIL import Image
 from procedure import Procedure
 from pandas import read_excel
+from selenium.webdriver.chrome.service import Service as ChromeService
+from subprocess import CREATE_NO_WINDOW
 
 
 
@@ -72,23 +74,23 @@ class MainFrame(customtkinter.CTkFrame):
     def __init__(self, master,**kwargs):
         super().__init__(master,**kwargs)
         self.master=master
-        self.p = Procedure(master.browser,master.file)
+        self.p = Procedure(master.browser,master.excel)
                 
         self.f1 = customtkinter.CTkFrame(master)
         self.lab=customtkinter.CTkLabel(self.f1,text="Connectez-vous à un entrepot\nAller sur GESTION DES COMMANDES D'ACHATS\n(01->02->07)\nPuis appuyez sur configurer.").pack(side="top",pady=(25,25))
-        self.but=customtkinter.CTkButton(self.f1,text="Configurer",width=150,height=40).pack()
-        self.lab2=customtkinter.CTkLabel(self.f1,text_color="red",text="").pack(side="south")
+        self.but=customtkinter.CTkButton(self.f1,text="Configurer",width=150,height=40,command=lambda :self.configure()).pack()
+        self.lab2=customtkinter.CTkLabel(self.f1,text_color="red",text="").pack(side="bottom")
 
         self.f1.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
-    
+        print(self.f1.winfo_children())
     def configure(self):
         if not self.p.get_Entrepot():
-            self.lab2.configure(text="Impossible de récupérer l'entrepot.")
+            self.f1.winfo_children()[-1].configure(text="Impossible de récupérer l'entrepot.")
             return
         if not self.p.get_date():
-            self.lab2.configure(text="Impossible de charger la date sur l'excel.")
+            self.f1.winfo_children()[-1].configuree(text="Impossible de charger la date sur l'excel.")
             return
-        print("youpi")
+        self.p.create_list()
     def clear_frame(self):
         for el in self.master.winfo_children():
             el.destroy()
@@ -137,17 +139,23 @@ class Test(customtkinter.CTk):
             super().__init__()
             self.geometry("800x400")
             self.title("EuroFel Utility")
-            self.browser= webdriver.Chrome()
+            customtkinter.set_appearance_mode("Dark")
+
+            self.service=ChromeService('chromedriver')
+            self.service.creation_flags= CREATE_NO_WINDOW
+            self.browser= webdriver.Chrome(service=self.service)
             self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
-            self.file="carrefour.fournisseur 270723 FI"
-            self.excel=read_excel(file, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str})
-            self.state=[False,False]
-            self.my_frame = MainFrame(self)
-    
+            
+            self.file="carrefour.fournisseur 270723 FI.xlsx"
+            self.excel=read_excel(self.file, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str})
+            self.stateeee=[False,False]
+            self.p=None
+            self.my_frame = MainFrame(self)   
 
 #App = MainWindow()
 App = Test()
 App.mainloop()
+App.browser.close()
 
 
 
