@@ -7,7 +7,7 @@ from PIL import Image
 from procedure import Procedure
 from pandas import read_excel
 from selenium.webdriver.chrome.service import Service as ChromeService
-#from subprocess import CREATE_NO_WINDOW
+from subprocess import CREATE_NO_WINDOW
 
 
 
@@ -146,9 +146,11 @@ class MainWindow(customtkinter.CTk):
 
     
     def launchBrowser(self):
-        self.browser=webdriver.Chrome()
-        #self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
-        self.browser.get("https://www.google.com")
+        self.service=ChromeService('chromedriver')
+        self.service.creation_flags= CREATE_NO_WINDOW
+        self.browser= webdriver.Chrome(service=self.service)
+        self.browser= webdriver.Chrome()
+        self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
     def loadExcel(self):
         self.file=tkinter.filedialog.askopenfile(title="Select excel file",initialdir='./',filetypes=(("Excel files", ".xlsx .xls"),))
         self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str})
