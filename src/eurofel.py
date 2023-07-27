@@ -130,6 +130,7 @@ class MainFrame(customtkinter.CTkFrame):
             self.but.configure(text="Arreter")
             self.p.start=True
             #Appel fonction demmarage
+            self.p.setup()
 
 #Main Windows
 class MainWindow(customtkinter.CTk):
