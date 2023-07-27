@@ -11,9 +11,9 @@ class Procedure():
         self.browser = browser
         self.excel = excel
 
-        self.entrepot=None
-        self.secteur=None
-        self.date=None
+        self.entrepot="175"
+        self.secteur="2"
+        self.date="270723"
         self.fournisseurs_set=set()
 
 
