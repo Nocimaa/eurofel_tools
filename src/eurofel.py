@@ -8,7 +8,7 @@ from procedure import Procedure
 from pandas import read_excel
 from selenium.webdriver.chrome.service import Service as ChromeService
 from subprocess import CREATE_NO_WINDOW
-
+import threading
 
 
 #%%
@@ -80,16 +80,17 @@ class MainFrame(customtkinter.CTkFrame):
         self.lab=customtkinter.CTkLabel(self.f1,text="Connectez-vous à un entrepot\nAller sur GESTION DES COMMANDES D'ACHATS\n(01->02->07)\nPuis appuyez sur configurer.").pack(side="top",pady=(25,25))
         self.but=customtkinter.CTkButton(self.f1,text="Configurer",width=150,height=40,command=lambda :self.configure()).pack()
         self.lab2=customtkinter.CTkLabel(self.f1,text_color="red",text="").pack(side="bottom")
-
+        self.td=customtkinter.CTkComboBox(self.f1, values=["Ferme", "Fictive"]).pack(pady=(20,20))
         self.f1.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
 
 
     def configure(self):
+        print(self.f1.winfo_children()[-1].get())
         if not self.p.get_Entrepot():
-            self.f1.winfo_children()[-1].configure(text="Impossible de récupérer l'entrepot.")
+            self.f1.winfo_children()[-2].configure(text="Impossible de récupérer l'entrepot.")
             return
         if not self.p.get_date():
-            self.f1.winfo_children()[-1].configuree(text="Impossible de charger la date sur l'excel.")
+            self.f1.winfo_children()[-2].configuree(text="Impossible de charger la date sur l'excel.")
             return
         self.p.get_secteur()
         self.p.create_list()
@@ -100,6 +101,7 @@ class MainFrame(customtkinter.CTkFrame):
         self.destroy()
 
     def switch(self):
+        self.p.ffi=self.f1.winfo_children()[-1].get()
         self.f1.destroy()
 
         self.f2 = customtkinter.CTkFrame(self.master)
@@ -130,7 +132,8 @@ class MainFrame(customtkinter.CTkFrame):
             self.but.configure(text="Arreter")
             self.p.start=True
             #Appel fonction demmarage
-            self.p.setup()
+            self.t=threading.Thread(target=self.p.setup)
+            self.t.start()
 
 #Main Windows
 class MainWindow(customtkinter.CTk):
@@ -155,7 +158,7 @@ class MainWindow(customtkinter.CTk):
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
     def loadExcel(self):
         self.file=tkinter.filedialog.askopenfile(title="Select excel file",initialdir='./',filetypes=(("Excel files", ".xlsx .xls"),))
-        self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str})
+        self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str})
     def verify(self):
         if isinstance(self.my_frame,LaunchFrame):
             self.stated[0]=self.my_frame.invert_excel_text()

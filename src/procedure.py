@@ -12,6 +12,7 @@ class Procedure():
         self.excel = excel
         self.action=ActionChains(browser)
 
+        self.ffi = "F"
 
         self.start=False
         self.state=False
@@ -57,7 +58,7 @@ class Procedure():
     def create_list(self):
         for i in range(len(self.ifls)):
             if self.entrepots[i]==self.entrepot:
-                self.L.append([self.ifls[i],self.prix[i],self.quantite[i],self.fournisseurs[i]])
+                self.L.append([self.ifls[i],self.prix[i],self.quantite[i],self.fournisseurs[i],self.code[i]])
                 self.fournisseurs_set.add((self.fournisseurs[i],self.code[i]))
         self.pas=len(self.L)
 
@@ -177,7 +178,7 @@ class Procedure():
         if len(s)<5:s="0"*(5-len(s))+s
         return s
     
-    def start(self,L):
+    def starte(self,L):
         i=0
         #f1_system()
         while i<len(L):
@@ -188,14 +189,11 @@ class Procedure():
                 
             self.ifls_input(L[i][0])
             if L[i][0]==self.get_first_item():
-                print("Same")
+                pass
             else:
-                print("Not the same")
-                #f1_system()
                 if self.import_ifls(L[i][0]):
-                    new_ifls=input("New ifls: ")
-                    L[i][0]=f(new_ifls)
-                    self.f1_system()
+                    print(f"Cannot import: {L[i]}")
+                    i+= 1
                     continue
             self.qp_input(str(L[i][2]),str(L[i][1]))
             i+=1
@@ -205,9 +203,13 @@ class Procedure():
         self.action.send_keys(Keys.F6)
         self.action.perform()
         self.waiting_system()
-        self.tab(1)
-        self.write(L[0][3])
-        if len(L[0][3])<=5:self.tab(1)
+        if self.ffi=="Ferme":
+            self.tab(1)
+        if self.ffi=="Fictive":
+            self.suppr(2)
+            self.write("FI")
+        self.write(L[0][4])
+        if len(L[0][4])<=5:self.tab(1)
         self.suppr(8)
         self.write(self.date.replace("/",""))
         self.tab(2)
@@ -223,13 +225,15 @@ class Procedure():
     def setup(self):
         for fournisseur in self.fournisseurs_set:
             #fournisseur=input("Saisir lefournisseur: ")
-            L=filter(lambda x:fournisseur[0]==x[-1],self.L)
-            L=set(L)
+            print(fournisseur)
+            L=filter(lambda x:fournisseur[0]==x[3],self.L)
+            L=list(L)
+            L.sort(key=lambda x:x[0])
             if len(L)==0:continue
             time.sleep(1)
             self.init(L)
             self.waiting_system()
-            self.start(L)
+            self.starte(L)
             self.write(Keys.F3)
             self.waiting_system()
             self.write(Keys.F3)
