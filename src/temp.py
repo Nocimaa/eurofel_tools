@@ -40,6 +40,7 @@ def loggin():
         waiting_system()
     write(credentials[0])
     enter()
+    waiting_system()
 
 def choose_bassin(bassin):
     if bassin=="901":
@@ -79,4 +80,19 @@ def waiting_system():
                     break
             except:
                 time.sleep(1)
-# %%
+                
+def full_process(bassin,entrepot):
+    loggin()
+    choose_bassin(bassin)
+    choose_entrepot(entrepot)
+      
+#%%
+def magasin_input(l):
+    i=0
+    while i != len(l):
+        h = driver.execute_script("return document.getElementsByClassName('NGREEN');")
+        for j in range(12):
+            tab(1)
+            if h[23+i*7].text in l.keys():
+                write(l[h[23+i*7]])
+                i+=1

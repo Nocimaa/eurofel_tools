@@ -108,6 +108,7 @@ class Procedure():
         except:
             pass
         print('Cannot be imported')
+        
         return None
 
     def waiting_system(self):
@@ -149,7 +150,11 @@ class Procedure():
         self.write(ifls)
         self.enter()
         self.waiting_system()
-        if self.get_first_imported()!=ifls:return True
+        if self.get_first_imported()!=ifls:
+            for i in range(2):
+                self.action.send_keys(Keys.F3)
+                self.action.perform()
+            return True
         self.tab(9)
         self.write("1")
         self.enter()
@@ -159,10 +164,8 @@ class Procedure():
         self.action.send_keys(Keys.F3)
         self.action.perform()
         if ifls!=self.get_first_item():
-            print("Product Not imported")
             return True
         else:
-            print("Product Imported")
             return False
     def ifls_input(self,ifls):
         #f1_system()

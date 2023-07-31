@@ -134,7 +134,15 @@ class MainFrame(customtkinter.CTkFrame):
             #Appel fonction demmarage
             self.t=threading.Thread(target=self.p.setup)
             self.t.start()
-
+            self.update_pb()
+    
+    def update_pb(self):
+        self.pb.set(self.p.ps/self.p.pas)
+        self.f3.winfo_children()[-1].configure(text=f"Produit saisie: {self.p.ps}")
+        
+        self.after(1000,self.update_pb)
+                                               
+        
 #Main Windows
 class MainWindow(customtkinter.CTk):
     def __init__(self):
