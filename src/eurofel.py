@@ -96,8 +96,7 @@ class MainFrame(customtkinter.CTkFrame):
         self.p.create_list()
         self.switch()
     def clear_frame(self):
-        for el in self.master.winfo_children():
-            el.destroy()
+        for el in self.master.winfo_children():el.destroy()
         self.destroy()
 
     def switch(self):
