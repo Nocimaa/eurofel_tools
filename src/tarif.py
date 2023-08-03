@@ -10,7 +10,7 @@ from pandas import read_excel
 
 #%%
 
-excel=read_excel("carrefour.magasin 020823.xlsx", sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'UL':str})
+excel=read_excel("carrefour.fournisseur 020823 F.xlsx", sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'UL':str})
 service=ChromeService('chromedriver')
 service.creation_flags= CREATE_NO_WINDOW
 browser= webdriver.Chrome(service=service)
@@ -34,13 +34,12 @@ def write(text):
     action.send_keys(text)
     action.perform()
 def waiting_system():
-        time.sleep(0.2)
+        time.sleep(0.1)
         while True:
             time.sleep(0.1)
             try:
                 h = browser.execute_script("return document.getElementById('sb_status');")
                 if not "X SYSTEM" in h.text:
-                    time.sleep(0.2)
                     break
             except:
                 time.sleep(1)
@@ -76,32 +75,35 @@ def get_first_imported():
         pass
     print('Cannot be imported')
 
-#%%
-def create_fp(date,ifls,canal):
-    action.send_keys(Keys.F6)
-    waiting_system()
-    action.send_keys(Keys.F4)
-    waiting_system()
-    tab(2)
-    write(ifls)
-    enter()
-    waiting_system()
 
-    if get_first_imported()!=ifls:
-        for i in range(2):action.send_keys(Keys.F3);waiting_system()
-    else:
-        tab(9)
-        write("1")
-        enter()
+#%%
+def tarif(excel):
+    for i in range(10):
+        cur = excel.iloc[i]
+        write(date)
+        tab(1)
+        write(Keys.F4)
         waiting_system()
         tab(2)
-        write(canal)
+        write(cur['IFLS'])
+        enter()
+        if get_first_imported()!= cur['IFLS']:
+            write(Keys.F3)
+            tab(5)
+            continue
+        tab(9)
+        write('1')
+        enter()
+        waiting_system()
         tab(1)
-        suppr(8)
-        write(date)
-        enter();waiting_system()
-        enter();waiting_system()
-def test(date):
-    suppr(8)
-    write(date)
+        write('ONN')
+        enter()
+        waiting_system()
+        enter()
+        verif_tarif()
+        enter()
+        waiting_system()
+        write(Keys.F3)
+        waiting_system()
+tarif(excel)
 # %%

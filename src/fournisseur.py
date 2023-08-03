@@ -93,16 +93,19 @@ class Procedure():
         return None
 
     def waiting_system(self):
-        time.sleep(0.2)
+        time.sleep(0.1)
         while True:
             time.sleep(0.1)
             try:
                 h = self.browser.execute_script("return document.getElementById('sb_status');")
                 if not "X SYSTEM" in h.text:
-                    time.sleep(0.2)
+                    time.sleep(0.1)
                     break
             except:
-                time.sleep(1)
+                time.sleep(0.25)
+        if  self.browser.execute_script("return document.getElementsByClassName('NWHITE');")[0].text.strip()=="Messages":
+            self.enter()
+            self.waiting_system()
     def qp_input(self,q,p):
         self.tab(5)
         self.suppr(7)
@@ -167,7 +170,7 @@ class Procedure():
         #f1_system()
         while i<len(df):
             cur=df.iloc[i]
-            print(f"{i}: {cur}")
+            print(f"{i}: {self.entrepot} {cur['IFLS']} {cur['FOURNISSEUR']}")
             #f1_system()
             self.waiting_system()
             self.suppr(6)
@@ -194,6 +197,7 @@ class Procedure():
             self.suppr(2)
             self.write("FI")
         self.write(code)
+        print(type(code))
         if len(code)<=5:self.tab(1)
         self.suppr(8)
         self.write(self.date.replace("/",""))
@@ -210,6 +214,7 @@ class Procedure():
     def setup(self):
         print("setup")
         self.full_process(self.entrepot)
+        print(self.fournisseurs_set)
         for f in self.fournisseurs_set:
             curr = self.excel[self.excel['FOURNISSEUR']==f]
             time.sleep(1)
