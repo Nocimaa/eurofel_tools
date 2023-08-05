@@ -11,7 +11,6 @@ from subprocess import CREATE_NO_WINDOW
 import threading
 import datetime
 import requests
-
 #Main Windows
 #Frame
 class LaunchFrame(customtkinter.CTkFrame):
@@ -125,7 +124,7 @@ class MainFrame(customtkinter.CTkFrame):
         ps=sum([int(pro.ps) for pro in self.p])
         self.pb.set(ps/self.pas)
         self.f3.winfo_children()[-1].configure(text=f"Produit saisie: {ps}")
-        
+        self.master.excel.to_excel('Rapport.xlsx')
         self.after(1000,self.update_pb)
                                                
         
