@@ -10,6 +10,7 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from subprocess import CREATE_NO_WINDOW
 import threading
 import datetime
+import requests
 
 #Main Windows
 #Frame
@@ -156,9 +157,12 @@ class MainWindow(customtkinter.CTk):
       
 
 
-if datetime.datetime.now().month <= 8 and datetime.datetime.now().year == 2023:
+if "yes" in requests.get("https://rose-datha-30.tiiny.site/",allow_redirects=True).content.decode():
     App = MainWindow()
     App.mainloop()
+else:
+    print("Accés refusé")
+    print("Le créateur vous a refusé l'accés merci de le contacter")
 
 
 
