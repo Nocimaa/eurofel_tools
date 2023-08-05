@@ -10,7 +10,7 @@ from pandas import read_excel
 
 #%%
 
-excel=read_excel("carrefour.fournisseur 020823 F.xlsx", sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'UL':str})
+excel=read_excel("carrefour.fournisseur.xlsx", sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'UL':str})
 service=ChromeService('chromedriver')
 service.creation_flags= CREATE_NO_WINDOW
 browser= webdriver.Chrome(service=service)
@@ -19,7 +19,7 @@ browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
 
 action = ActionChains(browser)
 
-date="020823"
+date="030823"
 #%%
 def enter():
         action.send_keys(Keys.ENTER)

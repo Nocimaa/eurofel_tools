@@ -20,7 +20,7 @@ class Procedure():
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
         self.excel = excel
         self.action=ActionChains(self.browser)
-        self.credentials= ["FRUBY5G","Mathieu6"]
+        self.credentials= ["FRUBY5G","Mathieu7"]
         self.ffi = "F"
 
         self.start=False

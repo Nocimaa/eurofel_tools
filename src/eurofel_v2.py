@@ -9,6 +9,7 @@ from pandas import read_excel
 from selenium.webdriver.chrome.service import Service as ChromeService
 from subprocess import CREATE_NO_WINDOW
 import threading
+import datetime
 
 #Main Windows
 #Frame
@@ -154,9 +155,10 @@ class MainWindow(customtkinter.CTk):
         if isinstance(self.my_frame,LaunchFrame):self.after(1000,self.verify)
       
 
- 
-App = MainWindow()
-App.mainloop()
+
+if datetime.datetime.now().month <= 8 and datetime.datetime.now().year == 2023:
+    App = MainWindow()
+    App.mainloop()
 
 
 

@@ -10,7 +10,7 @@ from pandas import read_excel
 
 #%%
 
-excel=read_excel("carrefour.magasin 020823.xlsx", sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'UL':str})
+excel=read_excel("carrefour.magasin 050823.xlsx", sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'MAGASIN':str,'PRIX':str,'QUANTITE':str,'CANAL':str,'JOUR':str,'UL':str})
 service=ChromeService('chromedriver')
 service.creation_flags= CREATE_NO_WINDOW
 browser= webdriver.Chrome(service=service)
@@ -77,31 +77,68 @@ def get_first_imported():
     print('Cannot be imported')
 
 #%%
-def create_fp(date,ifls,canal):
-    action.send_keys(Keys.F6)
+def create_fp(exc):
+    cur = exc.iloc[0]
+    write(Keys.F6)
     waiting_system()
-    action.send_keys(Keys.F4)
+    write(Keys.F4)
     waiting_system()
     tab(2)
-    write(ifls)
+    write(cur['IFLS'])
+    enter()
+    if get_first_imported() != cur['IFLS']:
+        print("Cannot im", cur['IFLS'])
+        write(Keys.F3)
+        write(Keys.F3)
+        return
+        
+    tab(9)
+    write("1")
+    enter()
+    waiting_system()
+    tab(2)
+    write(cur['CANAL'])
+    tab(1)
+    suppr(8)
+    write(cur['JOUR'])
+    enter()
+    waiting_system()
     enter()
     waiting_system()
 
-    if get_first_imported()!=ifls:
-        for i in range(2):action.send_keys(Keys.F3);waiting_system()
-    else:
-        tab(9)
-        write("1")
-        enter()
-        waiting_system()
-        tab(2)
-        write(canal)
+t={"01593":10,"21290":3,"27778":10}
+
+def input_market(exc):
+    c=0
+    t=dict(zip(exc['MAGASIN'],exc['QUANTITE']))
+    while c != len(t.keys()):
+        h=browser.execute_script("return document.getElementsByClassName('NGREEN');")
         tab(1)
-        suppr(8)
-        write(date)
-        enter();waiting_system()
-        enter();waiting_system()
-def test(date):
-    suppr(8)
-    write(date)
+        if int(h[23+7*11].text.strip())<int(min(t)):
+            write(Keys.PAGE_DOWN)
+            waiting_system()
+            continue
+        for i in range(12):
+            if h[23+7*i].text.strip() in t.keys():
+                write(t[h[23+7*i].text.strip()])
+                c+=1
+            if c==len(t.keys()):break
+            tab(1)
+        write(Keys.PAGE_DOWN)
+        waiting_system()
+    enter()
+    waiting_system()
+    write(Keys.F3)
+    waiting_system()
+
+def im(excel):
+    
+    for ifls in set(excel['IFLS']):
+        exc=excel[excel['IFLS']==ifls].sort_values(by=['MAGASIN'],ascending=False)
+        create_fp(exc)
+        waiting_system()
+        input_market(exc)
+        waiting_system()
+
+
 # %%
