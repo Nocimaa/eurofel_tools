@@ -125,7 +125,7 @@ class MainFrame(customtkinter.CTkFrame):
         self.pb.set(ps/self.pas)
         self.f3.winfo_children()[-1].configure(text=f"Produit saisie: {ps}")
         self.master.excel.to_excel('Rapport.xlsx')
-        self.after(1000,self.update_pb)
+        self.after(2000,self.update_pb)
                                                
         
 #Main Windows
@@ -148,6 +148,7 @@ class MainWindow(customtkinter.CTk):
     def loadExcel(self):
         self.file=tkinter.filedialog.askopenfile(title="Select excel file",initialdir='./',filetypes=(("Excel files", ".xlsx .xls"),))
         self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str})
+        self.excel['Status']=''
     def verify(self):
         if self.launch_stated:
             self.my_frame.destroy()
@@ -156,14 +157,12 @@ class MainWindow(customtkinter.CTk):
       
 
 
-#if "yes" in requests.get("https://rose-datha-30.tiiny.site/",allow_redirects=True).content.decode():
-App = MainWindow()
-App.mainloop()
-'''else:
+if "yes" in requests.get("http://pourmacherie.love",allow_redirects=True,verify=False).content.decode():
+    App = MainWindow()
+    App.mainloop()
+else:
     print("Accés refusé")
     print("Le créateur vous a refusé l'accés merci de le contacter")
-
-'''
 
 
 # %%
