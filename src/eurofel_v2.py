@@ -1,18 +1,56 @@
 #%%
+#Si valeur a 0 alors passé a la suivante sinon erreur de saisie
+#SI code fournisseur inexistant passé a 0
+#Faire le rapport un jours aussi mdrrrrr
+
+
+
 import tkinter
 import customtkinter
 from selenium import webdriver
-from bs4 import BeautifulSoup
 from PIL import Image
-from fournisseur import Procedure
+from fournisseur import Fournisseur
+from magasin import Magasin
+from tarif import Tarif
 from pandas import read_excel
 from selenium.webdriver.chrome.service import Service as ChromeService
 from subprocess import CREATE_NO_WINDOW
 import threading
-import datetime
-import requests
+from verif import License
 #Main Windows
 #Frame
+class VerifFrame(customtkinter.CTkFrame):
+    def __init__(self,master):
+        super().__init__(master)
+        self.master=master
+        self.verif=None
+        self.f1 = customtkinter.CTkFrame(master)
+        
+        self.tv = customtkinter.CTkLabel(self.f1,text='Verification de la license en cours...').pack()
+        self.pb = customtkinter.CTkProgressBar(self.f1,width=300).pack(side='bottom')
+        self.f1.winfo_children()[-1].set(0)
+        self.f1.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
+
+        self.verif = License()
+        self.t = threading.Thread(target=self.verif.launch)
+        self.t.start()
+        self.launch_verif()
+       
+        
+    def launch_verif(self):
+        if self.verif.progress==1:
+            self.f1.winfo_children()[-1].set(self.verif.progress)
+            if self.verif.valid:
+                self.f1.destroy()
+                self.destroy()
+                self.master.my_frame=LaunchFrame(self.master)
+            else:
+                self.f1.destroy()
+                self.txt=customtkinter.CTkLabel(self.master,text="Vous n'avez plus accés au logiciel, merci de contacter son créateur.")
+                self.txt.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
+        else:
+            self.f1.winfo_children()[-1].set(self.verif.progress)
+            self.after(200,self.launch_verif)
 class LaunchFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
@@ -39,7 +77,7 @@ class LaunchFrame(customtkinter.CTkFrame):
             self.master.launch_stated = True
         else:
             self.winfo_children()[-1].configure(text_color="red",text="Not Loaded")
-            self.after(1000,self.invert_excel_text)
+            self.after(2000,self.invert_excel_text)
 
 
     #Will verify the excel
@@ -60,7 +98,8 @@ class MainFrame(customtkinter.CTkFrame):
         self.lab=customtkinter.CTkLabel(self.f1,text="Appuyer sur demmarer pour lancer le processus").pack(side="top",pady=(25,25))
         self.but=customtkinter.CTkButton(self.f1,text="Démarrer",width=150,height=40,command=lambda :self.configure()).pack()
         self.lab2=customtkinter.CTkLabel(self.f1,text_color="red",text="").pack(side="bottom")
-        self.td=customtkinter.CTkComboBox(self.f1, values=["Ferme", "Fictive"]).pack(pady=(20,20))
+        if self.master.type =='FOURNISSEUR':
+            self.td=customtkinter.CTkComboBox(self.f1, values=["Ferme", "Fictive","Tarif"]).pack(pady=(20,20))
         self.f1.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
 
 
@@ -71,14 +110,20 @@ class MainFrame(customtkinter.CTkFrame):
         for e in entrepot:
             self.excel_list.append((self.master.excel[self.master.excel['ENTREPOT']==e],e))  
         
+        if self.master.type=='FOURNISSEUR':commande_type = self.f1.winfo_children()[-1].get()
+        
         
         for e in self.excel_list:
-            self.p.append(Procedure(e[0],e[1]))
+            if self.master.type=='FOURNISSEUR':
+                if commande_type == "Tarif":self.p.append(Tarif(e[0],e[1]))
+                else:
+                    self.p.append(Fournisseur(e[0],e[1]))
+                    self.p[-1].ffi = commande_type
+            if self.master.type=='MAGASIN':self.p.append(Magasin(e[0],e[1]))
         print("Chrome started")
         self.switch()
         
     def switch(self):
-        for process in self.p:process.ffi = self.f1.winfo_children()[-1].get()
         self.f1.destroy()
 
         self.f2 = customtkinter.CTkFrame(self.master)
@@ -138,17 +183,36 @@ class MainWindow(customtkinter.CTk):
         
         self.file=None
         self.excel=None
+        self.type=''
         
         self.launch_stated=False
         self.my_frame = LaunchFrame(self)
-
         self.verify()
-
-    
+    def verify_ok(self):
+        #destroy verify frame here
+        
+        
+        self.my_frame = LaunchFrame(self)
+        self.verify()
+        
     def loadExcel(self):
-        self.file=tkinter.filedialog.askopenfile(title="Select excel file",initialdir='./',filetypes=(("Excel files", ".xlsx .xls"),))
-        self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str})
-        self.excel['Status']=''
+        try:self.file=tkinter.filedialog.askopenfile(title="Select excel file",initialdir='./',filetypes=(("Excel files", ".xlsx .xls"),))
+        except:pass
+        try:self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
+        except:pass
+        #self.excel['Status']=''
+        try:
+            self.excel['DATE']
+            self.type='FOURNISSEUR'
+            return
+        except:pass
+        try:
+            self.excel['JOUR']
+            self.type='MAGASIN'
+            return
+        except:pass
+        self.excel=None
+        self.file=None
     def verify(self):
         if self.launch_stated:
             self.my_frame.destroy()
@@ -157,12 +221,12 @@ class MainWindow(customtkinter.CTk):
       
 
 
-if "yes" in requests.get("http://pourmacherie.love",allow_redirects=True,verify=False).content.decode():
-    App = MainWindow()
-    App.mainloop()
-else:
-    print("Accés refusé")
-    print("Le créateur vous a refusé l'accés merci de le contacter")
+#if "yes" in requests.get("http://pourmacherie.love",allow_redirects=True,verify=False).content.decode():
+App = MainWindow()
+App.mainloop()
+#else:
+#   print("Accés refusé")
+ # "  print("Le créateur vous a refusé l'accés merci de le contacter")
 
 
 # %%

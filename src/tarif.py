@@ -1,109 +1,185 @@
 #%%
-import threading
 import time
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service as ChromeService
 from subprocess import CREATE_NO_WINDOW
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from pandas import read_excel
-
+excel=read_excel('carrefour.fournisseur 110823.xlsx', sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
 #%%
+class Tarif():
+    def __init__(self,excel,entrepot):
+        
+        
+        self.service=ChromeService('chromedriver')
+        self.service.creation_flags= CREATE_NO_WINDOW
+        options = Options()
+        self.browser= webdriver.Chrome(service=self.service,options=options)  
+        self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
+        self.excel = excel
+        self.action=ActionChains(self.browser)
+        self.credentials= ["FRUBY5G","Mathieu2"]
 
-excel=read_excel("carrefour.fournisseur.xlsx", sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'UL':str})
-service=ChromeService('chromedriver')
-service.creation_flags= CREATE_NO_WINDOW
-browser= webdriver.Chrome(service=service)
-browser.minimize_window()
-browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
+        self.start=False
+        self.state=False
 
-action = ActionChains(browser)
+        self.entrepot=entrepot
+        self.secteur="12" if entrepot == "175" else "2"
+        self.date=self.excel.iloc[0]['DATE']
+        self.fournisseurs_set=set(self.excel['FOURNISSEUR'])
 
-date="030823"
-#%%
-def enter():
-        action.send_keys(Keys.ENTER)
-        action.perform()
-def tab(i):
-    for _ in range(i):action.send_keys(Keys.TAB)
-    action.perform()
-def suppr(i):
-    for _ in range(i):action.send_keys(Keys.DELETE)
-    action.perform()
-def write(text):
-    action.send_keys(text)
-    action.perform()
-def waiting_system():
+        self.pas=len(self.excel)
+        self.ps=0
+
+        self.etb={"175":"901","729":"961","774":"961"}
+
+    #Process
+    def enter(self):
+        self.action.send_keys(Keys.ENTER)
+        self.action.perform()
+    def tab(self,i):
+        for _ in range(i):self.action.send_keys(Keys.TAB)
+        self.action.perform()
+    def suppr(self,i):
+        for _ in range(i):self.action.send_keys(Keys.DELETE)
+        self.action.perform()
+    def write(self,text):
+        self.action.send_keys(text)
+        self.action.perform()
+
+    def get_first_imported(self):
+        self.waiting_system()
+        try:
+            h = self.browser.execute_script("return document.getElementsByClassName('NGREEN');")[24]
+            int(h.text)
+            if len(h.text)!=6:raise ValueError
+            return h.text
+        except:
+            pass
+        try:
+            h = self.browser.execute_script("return document.getElementsByClassName('NPINK');")[1]
+            int(h.text)
+            if len(h.text)!=6:raise ValueError
+            return h.text
+        except:
+            pass
+        print('Cannot be imported')
+        
+        return None
+
+    def waiting_system(self):
         time.sleep(0.1)
         while True:
             time.sleep(0.1)
             try:
-                h = browser.execute_script("return document.getElementById('sb_status');")
+                h = self.browser.execute_script("return document.getElementById('sb_status');")
                 if not "X SYSTEM" in h.text:
+                    time.sleep(0.1)
                     break
             except:
-                time.sleep(1)
-        if  browser.execute_script("return document.getElementsByClassName('NWHITE');")[0].text.strip()=="Messages":
-            enter()
-            waiting_system()
+                time.sleep(0.25)
+        if  self.browser.execute_script("return document.getElementsByClassName('NWHITE');")[0].text.strip()=="Messages":
+            self.enter()
+            self.waiting_system()
+    def verif_tarif(self):
+        while True:
+            try:
+                if len(self.browser.execute_script("return document.getElementsByClassName('NWHITE');"))==5:
+                    return False
+                self.enter()
+                self.waiting_system()
+                if self.browser.execute_script("return document.getElementsByClassName('NWHITE');")[1].text=="MODIFICATION D'UN TARIF":
+                    return True
+            except:pass
+    def tarif(self,ifls):
+        self.write(self.date)
+        self.write(Keys.F4)
+        self.waiting_system()
+        self.tab(2)
+        self.write(ifls)
+        self.enter()
+        if self.get_first_imported()!= ifls:
+            self.write(Keys.F3)
+            self.tab(5)
+            print("Cannot create tarif for ", ifls)
+            return
+        self.tab(9)
+        self.write('1')
+        self.enter()
+        self.waiting_system()
+        self.tab(2)
+        self.write('ONN')
+        self.enter()
+        self.waiting_system()
+        self.enter()
+        if not self.verif_tarif():
+            print("Cannot create tarif for ", ifls)
+            return                
+        self.enter()
+        self.waiting_system()
+        self.write(Keys.F3)
+        self.ps+=1
+        self.waiting_system()
+    
+    def setup(self):
+        self.full_process(self.entrepot)
+        for ifls in set(self.excel['IFLS']):
+            self.tarif(ifls)
         
-def verif_tarif():
-    while True:
-        try:
-            enter()
-            waiting_system()
-            if browser.execute_script("return document.getElementsByClassName('NWHITE');")[1].text=="MODIFICATION D'UN TARIF":
-                return
-        except:
-            print("zeubi")
+    def full_process(self,entrepot):
+        self.loggin()
+        self.choose_bassin(self.etb[entrepot])
+        self.choose_entrepot(entrepot)
+        self.action.send_keys("01")
+        self.action.perform()
+        self.waiting_system()
+        self.action.send_keys("01")
+        self.action.perform()
+        self.waiting_system()
+        self.action.send_keys("09")
+        self.action.perform()
+        self.waiting_system()
         
-def get_first_imported():
-    waiting_system()
-    try:
-        h = browser.execute_script("return document.getElementsByClassName('NGREEN');")[24]
-        int(h.text)
-        if len(h.text)!=6:raise ValueError
-        return h.text
-    except:
-        pass
-    try:
-        h = browser.execute_script("return document.getElementsByClassName('NPINK');")[1]
-        int(h.text)
-        if len(h.text)!=6:raise ValueError
-        return h.text
-    except:
-        pass
-    print('Cannot be imported')
+        
+    def loggin(self):
+        self.write(self.credentials[0])
+        self.tab(1)
+        self.write(self.credentials[1])
+        self.enter()
+        self.waiting_system()
+        time.sleep(5)
+        while self.verif()==0:
+            self.enter()
+            self.waiting_system()
+        self.write(self.credentials[0])
+        self.enter()
+        self.waiting_system()
 
+    def choose_bassin(self,bassin):
+        if bassin=="901":
+            self.tab(1)
+        if bassin=="961":
+            self.tab(2)
+        self.write("1")
+        self.enter()
+        self.waiting_system()
+        while self.verif()==0:
+            self.enter()
+            self.waiting_system()
 
-#%%
-def tarif(excel):
-    for i in range(10):
-        cur = excel.iloc[i]
-        write(date)
-        tab(1)
-        write(Keys.F4)
-        waiting_system()
-        tab(2)
-        write(cur['IFLS'])
-        enter()
-        if get_first_imported()!= cur['IFLS']:
-            write(Keys.F3)
-            tab(5)
-            continue
-        tab(9)
-        write('1')
-        enter()
-        waiting_system()
-        tab(1)
-        write('ONN')
-        enter()
-        waiting_system()
-        enter()
-        verif_tarif()
-        enter()
-        waiting_system()
-        write(Keys.F3)
-        waiting_system()
-tarif(excel)
+    def choose_entrepot(self,entrepot):
+        self.write("07")
+        self.write(entrepot)
+        self.enter()
+        self.waiting_system()
+        self.tab(4)
+        self.write("1")
+        self.enter()
+        self.waiting_system()
+    
+    def verif(self):
+        h = self.browser.execute_script("return document.getElementsByClassName('RGREEN');")
+        return len(h)
 # %%

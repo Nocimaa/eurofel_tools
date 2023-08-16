@@ -6,21 +6,22 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service as ChromeService
 from subprocess import CREATE_NO_WINDOW
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-
-class Procedure():
+class Fournisseur():
     def __init__(self,excel,entrepot):
         
         
         self.service=ChromeService('chromedriver')
         self.service.creation_flags= CREATE_NO_WINDOW
-        self.browser= webdriver.Chrome(service=self.service)
-        self.browser.minimize_window()
+        options = Options()
+        #options.add_argument('--headless=new')
+        self.browser= webdriver.Chrome(service=self.service,options=options)  
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
         self.excel = excel
         self.action=ActionChains(self.browser)
-        self.credentials= ["FRUBY5G","Mathieu8"]
+        self.credentials= ["FRUBY5G","Mathieu2"]
         self.ffi = "F"
 
         self.start=False
@@ -62,13 +63,13 @@ class Procedure():
         while True:
             try:
                 time.sleep(0.25)
-                for i in range(3):
+                for i in range(4):
                     try:
-                        h = self.browser.execute_script("return document.getElementsByClassName('NGREEN');")[26+i]
+                        h = self.browser.execute_script("return document.getElementsByClassName('NGREEN');")[25+i]
                         int(h.text)
                         return h.text
                     except:
-                        if i==2:return None
+                        if i==3:return None
             except:
                 print("get_first crash")
                 time.sleep(1)
@@ -170,21 +171,25 @@ class Procedure():
         #f1_system()
         while i<len(df):
             cur=df.iloc[i]
-            print(f"{i}: {self.entrepot} {cur['IFLS']} {cur['FOURNISSEUR']}")
+            #print(f"{i}: {self.entrepot} {cur['IFLS']} {cur['FOURNISSEUR']}")
             #f1_system()
             self.waiting_system()
             self.suppr(6)
-                
+            if int(cur['QUANTITE'])==0:
+                i+=1
+                continue    
             self.ifls_input(cur['IFLS'])
             if cur['IFLS']==self.get_first_item():
                 pass
             else:
                 if self.import_ifls(cur['IFLS']):
-                    print(f"Cannot import: {cur['IFLS']}, {cur['FOURNISSEUR']}")
+                    print(f"Cannot import: {self.entrepot} {cur['IFLS']}, {cur['FOURNISSEUR']}")
+                    self.excel.loc[self.excel['IFLS']==cur['IFLS'],'Status']='Ko'
                     i+= 1
                     continue
             self.qp_input(str(cur['QUANTITE']),str(cur['PRIX']))
             i+=1
+            self.excel.loc[self.excel['IFLS']==cur['IFLS'],'Status']='Ok'
             self.ps+=1
     def init(self,code):
         #f1_system()
@@ -197,7 +202,6 @@ class Procedure():
             self.suppr(2)
             self.write("FI")
         self.write(code)
-        print(type(code))
         if len(code)<=5:self.tab(1)
         self.suppr(8)
         self.write(self.date.replace("/",""))
@@ -225,26 +229,7 @@ class Procedure():
             self.waiting_system()
             self.write(Keys.F3)
             self.waiting_system()
-            
-        '''
-        
-        
-        for fournisseur in self.fournisseurs_set:
-            #fournisseur=input("Saisir lefournisseur: ")
-            print(fournisseur)
-            L=filter(lambda x:fournisseur[0]==x[3],self.L)
-            L=list(L)
-            L.sort(key=lambda x:x[0])
-            if len(L)==0:continue
-            time.sleep(1)
-            self.init(L)
-            self.waiting_system()
-            self.starte(L)
-            self.write(Keys.F3)
-            self.waiting_system()
-            self.write(Keys.F3)
-            self.waiting_system()
-        '''
+
     def full_process(self,entrepot):
         self.loggin()
         self.choose_bassin(self.etb[entrepot])
@@ -266,6 +251,7 @@ class Procedure():
         self.write(self.credentials[1])
         self.enter()
         self.waiting_system()
+        time.sleep(4)
         while self.verif()==0:
             self.enter()
             self.waiting_system()
