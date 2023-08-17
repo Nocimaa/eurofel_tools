@@ -43,7 +43,7 @@ class VerifFrame(customtkinter.CTkFrame):
             if self.verif.valid:
                 self.f1.destroy()
                 self.destroy()
-                self.master.my_frame=LaunchFrame(self.master)
+                self.master.verify_ok()
             else:
                 self.f1.destroy()
                 self.txt=customtkinter.CTkLabel(self.master,text="Vous n'avez plus accés au logiciel, merci de contacter son créateur.")
@@ -186,8 +186,7 @@ class MainWindow(customtkinter.CTk):
         self.type=''
         
         self.launch_stated=False
-        self.my_frame = LaunchFrame(self)
-        self.verify()
+        self.my_frame = VerifFrame(self)
     def verify_ok(self):
         #destroy verify frame here
         
