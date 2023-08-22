@@ -4,7 +4,7 @@ import time
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service as ChromeService
-from subprocess import CREATE_NO_WINDOW
+#from subprocess import CREATE_NO_WINDOW
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -14,7 +14,7 @@ class Fournisseur():
         
         
         self.service=ChromeService('chromedriver')
-        self.service.creation_flags= CREATE_NO_WINDOW
+        #self.service.creation_flags= CREATE_NO_WINDOW
         options = Options()
         #options.add_argument('--headless=new')
         self.browser= webdriver.Chrome(service=self.service,options=options)  
