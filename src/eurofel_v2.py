@@ -1,6 +1,4 @@
 #%%
-#Si valeur a 0 alors passé a la suivante sinon erreur de saisie
-#SI code fournisseur inexistant passé a 0
 #Faire le rapport un jours aussi mdrrrrr
 
 
@@ -168,10 +166,7 @@ class MainFrame(customtkinter.CTkFrame):
     def writting_rapport(self):
         for thread in self.t:
             thread.join()
-        exc = self.excel_list[0]
-        for i in range(1,len(self.excel_list)):
-            exc = concat(exc,self.excel_list[i])
-        exc.to_excel('Rapport.xlsx')
+        self.master.excel.to_excel('Rapport.xlsx')
     
     def update_pb(self):
         

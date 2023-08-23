@@ -18,7 +18,7 @@ class Magasin():
         
         
         self.service=ChromeService('chromedriver')
-        #self.service.creation_flags= CREATE_NO_WINDOW
+        self.service.creation_flags= CREATE_NO_WINDOW
         self.browser= webdriver.Chrome(service=self.service)
         self.browser.minimize_window()
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
@@ -57,6 +57,7 @@ class Magasin():
         self.waiting_system()
         try:
             h = self.browser.execute_script("return document.getElementsByClassName('NGREEN');")[24]
+            if h.text.isalpha():return h.text
             int(h.text)
             if len(h.text)!=6:raise ValueError
             return h.text
@@ -64,6 +65,7 @@ class Magasin():
             pass
         try:
             h = self.browser.execute_script("return document.getElementsByClassName('NPINK');")[1]
+            if h.text.isalpha():return h.text
             int(h.text)
             if len(h.text)!=6:raise ValueError
             return h.text

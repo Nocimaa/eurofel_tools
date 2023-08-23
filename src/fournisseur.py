@@ -15,7 +15,7 @@ class Fournisseur():
         
         self.main_excel=excel
         self.service=ChromeService('chromedriver')
-        #self.service.creation_flags= CREATE_NO_WINDOW
+        self.service.creation_flags= CREATE_NO_WINDOW
         options = Options()
         #options.add_argument('--headless=new')
         self.browser= webdriver.Chrome(service=self.service,options=options)  
@@ -37,14 +37,6 @@ class Fournisseur():
         self.ps=0
 
         self.etb={"175":"901","729":"961","774":"961"}
-        """
-        self.ifls = self.excel['IFLS']
-        self.entrepots = self.excel['ENTREPOT']
-        self.code = self.excel['CODE FOURNISSEUR']
-        self.prix =  self.excel['PRIX']
-        self.quantite = self.excel['QUANTITE']
-        self.fournisseurs=self.excel['FOURNISSEUR']
-        """
 
     #Process
     def enter(self):
@@ -78,6 +70,7 @@ class Fournisseur():
         self.waiting_system()
         try:
             h = self.browser.execute_script("return document.getElementsByClassName('NGREEN');")[24]
+            if h.text.isalpha():return h.text
             int(h.text)
             if len(h.text)!=6:raise ValueError
             return h.text
@@ -85,6 +78,7 @@ class Fournisseur():
             pass
         try:
             h = self.browser.execute_script("return document.getElementsByClassName('NPINK');")[1]
+            if h.text.isalpha():return h.text
             int(h.text)
             if len(h.text)!=6:raise ValueError
             return h.text
@@ -179,22 +173,25 @@ class Fournisseur():
             if int(cur['QUANTITE'])==0:
                 i+=1
                 self.ps+=1
-                #self.main_excel[self.main_excel['IFLS']==cur['IFLS'] and self.main_excel['ENTREPOT'] == self.entrepot] = 'Ko: Quantity 0'
-                continue    
+                self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']=='019970'),'Status']='Quantité 0'
+                continue  
+            if float(cur['PRIX'].replace(',','.'))==0:
+                i+=1
+                #Ecrire Ko
+                self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']=='019970'),'Status']='Ko: Prix Zéro'
+                continue  
             self.ifls_input(cur['IFLS'])
             if cur['IFLS']==self.get_first_item():
                 pass
             else:
                 if self.import_ifls(cur['IFLS']):
                     print(f"Cannot import: {self.entrepot} {cur['IFLS']}, {cur['FOURNISSEUR']}")
-                    #self.excel[self.excel['IFLS']==cur['IFLS']]='Ko'
-                    #self.main_excel[self.main_excel['IFLS']==cur['IFLS'] and self.main_excel['ENTREPOT'] == self.entrepot] = 'Ko: Product cannot be imported'
+                    self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']=='019970'),'Status']='Ko: Cannot Be imported'
                     i+= 1
                     continue
             self.qp_input(str(cur['QUANTITE']),str(cur['PRIX']))
             i+=1
-            #self.excel[self.excel['IFLS']==cur['IFLS']]['Status']='Ok'
-            #self.main_excel[self.main_excel['IFLS']==cur['IFLS'] and self.main_excel['ENTREPOT'] == self.entrepot] = 'Ok'
+            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']=='019970'),'Status']='Ok'
             self.ps+=1
     def init(self,code):
         #f1_system()
@@ -206,6 +203,10 @@ class Fournisseur():
         if self.ffi=="Fictive":
             self.suppr(2)
             self.write("FI")
+        try:
+            int(code)
+        except:
+            return False
         self.write(code)
         if len(code)<=5:self.tab(1)
         self.suppr(8)
@@ -219,6 +220,7 @@ class Fournisseur():
         self.action.send_keys(Keys.F6)
         self.action.perform()
         self.waiting_system()
+        return True
 
     def setup(self):
         print("setup")
@@ -227,7 +229,9 @@ class Fournisseur():
         for f in self.fournisseurs_set:
             curr = self.excel[self.excel['FOURNISSEUR']==f]
             time.sleep(1)
-            self.init(curr['CODE FOURNISSEUR'].iloc[0])
+            if not self.init(curr['CODE FOURNISSEUR'].iloc[0]):
+                self.write(Keys.F3)
+                continue
             self.waiting_system()
             self.starte(curr)
             self.write(Keys.F3)
