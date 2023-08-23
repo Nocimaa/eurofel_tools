@@ -14,9 +14,11 @@ from magasin import Magasin
 from tarif import Tarif
 from pandas import read_excel
 from selenium.webdriver.chrome.service import Service as ChromeService
-from subprocess import CREATE_NO_WINDOW
+import os
 import threading
 from verif import License
+if os.name == 'nt': 
+    from subprocess import CREATE_NO_WINDOW
 #Main Windows
 #Frame
 class VerifFrame(customtkinter.CTkFrame):
