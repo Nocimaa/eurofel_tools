@@ -4,9 +4,9 @@ import time
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service as ChromeService
-from subprocess import CREATE_NO_WINDOW
+import os
+if os.name == 'nt': from subprocess import CREATE_NO_WINDOW
 from selenium import webdriver
-from pandas import read_excel
 
 #%%
 
@@ -18,7 +18,7 @@ class Magasin():
         
         
         self.service=ChromeService('chromedriver')
-        self.service.creation_flags= CREATE_NO_WINDOW
+        #self.service.creation_flags= CREATE_NO_WINDOW
         self.browser= webdriver.Chrome(service=self.service)
         self.browser.minimize_window()
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")

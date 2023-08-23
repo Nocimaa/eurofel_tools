@@ -12,9 +12,10 @@ from fournisseur import Fournisseur
 from magasin import Magasin
 from tarif import Tarif
 from pandas import read_excel,concat,ExcelWriter
-from subprocess import CREATE_NO_WINDOW
+import os
 import threading
 from verif import License
+if os.name == 'nt': from subprocess import CREATE_NO_WINDOW
 #Main Windows
 #Frame
 class VerifFrame(customtkinter.CTkFrame):

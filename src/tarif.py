@@ -3,7 +3,8 @@ import time
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service as ChromeService
-from subprocess import CREATE_NO_WINDOW
+import os
+if os.name == 'nt': from subprocess import CREATE_NO_WINDOW
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from pandas import read_excel
@@ -52,6 +53,7 @@ class Tarif():
         self.waiting_system()
         try:
             h = self.browser.execute_script("return document.getElementsByClassName('NGREEN');")[24]
+            if h.text.isalpha():return h.text
             int(h.text)
             if len(h.text)!=6:raise ValueError
             return h.text
@@ -59,6 +61,7 @@ class Tarif():
             pass
         try:
             h = self.browser.execute_script("return document.getElementsByClassName('NPINK');")[1]
+            if h.text.isalpha():return h.text
             int(h.text)
             if len(h.text)!=6:raise ValueError
             return h.text
@@ -91,6 +94,8 @@ class Tarif():
                 self.waiting_system()
                 if self.browser.execute_script("return document.getElementsByClassName('NWHITE');")[1].text=="MODIFICATION D'UN TARIF":
                     return True
+                if self.browser.execute_script("return document.getElementsByClassName('NWHITE');")[1].text=="GENERATION DU TARIF POUR 1 ARTICLE":
+                    return False
             except:pass
     def tarif(self,ifls):
         self.write(self.date)
