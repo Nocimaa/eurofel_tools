@@ -18,7 +18,7 @@ class Magasin():
         
         
         self.service=ChromeService('chromedriver')
-        self.service.creation_flags= CREATE_NO_WINDOW
+        if os.name == 'nt':self.service.creation_flags= CREATE_NO_WINDOW
         self.browser= webdriver.Chrome(service=self.service)
         self.browser.minimize_window()
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")

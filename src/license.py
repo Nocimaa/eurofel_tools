@@ -33,11 +33,36 @@ def get_M(license):
 def get_C(license):
     return license[-2]+license[-3]
 
-def get_Key(E,R,d):
-    L=[]
-    for i in range(3):
-        L.append(int(d[R[i]])**int(d[E[i]]))
-    return L
+def decrypt(license):
+        Y=get_Y(license)
+        M=get_M(license)
+        D=get_D(license)
+
+        c='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        d1=dict()
+        d2=dict()
+        for i in range(len(c)):
+            d1[c[i]]=i
+            d2[str(i)]=c[i]
+
+        E=[d1[el] for el in get_E(license)]
+        R=[d1[el] for el in get_R(license)]
+        Y=caesar(get_Y(license),d1,d2,-E[0]**R[0])
+        M=caesar(get_M(license),d1,d2,-E[1]**R[1])
+        D=caesar(get_D(license),d1,d2,-E[2]**R[2])
+
+        return datetime.date(int(Y),int(M),int(D))
+
+
+
+# %%
+def caesar(st,dict,dict1,key):
+    s=''
+    for e in st:
+        k=str((dict[e]+key)%36)
+        s+=dict1[k]
+    return s
+# %%
 
 def encrypt(date):
     license = '0000-0000-0000-0000'
@@ -73,36 +98,5 @@ def encrypt(date):
 
     return "".join(L)
 
-def decrypt(license):
-        Y=get_Y(license)
-        M=get_M(license)
-        D=get_D(license)
 
-        c='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        d1=dict()
-        d2=dict()
-        for i in range(len(c)):
-            d1[c[i]]=i
-            d2[str(i)]=c[i]
-
-        E=[d1[el] for el in get_E(license)]
-        R=[d1[el] for el in get_R(license)]
-        Y=caesar(get_Y(license),d1,d2,-E[0]**R[0])
-        M=caesar(get_M(license),d1,d2,-E[1]**R[1])
-        D=caesar(get_D(license),d1,d2,-E[2]**R[2])
-
-        return datetime.date(int(Y),int(M),int(D))
-
-E1,R1= random.randint(1,35),random.randint(1,35)
-E2,R2= random.randint(1,35),random.randint(1,35)
-E3,R3= random.randint(1,35),random.randint(1,35)
-
-
-# %%
-def caesar(st,dict,dict1,key):
-    s=''
-    for e in st:
-        k=str((dict[e]+key)%36)
-        s+=dict1[k]
-    return s
 # %%

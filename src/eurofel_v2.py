@@ -1,4 +1,6 @@
 #%%
+#Si valeur a 0 alors passé a la suivante sinon erreur de saisie
+#SI code fournisseur inexistant passé a 0
 #Faire le rapport un jours aussi mdrrrrr
 
 
@@ -9,7 +11,7 @@ from PIL import Image
 from fournisseur import Fournisseur
 from magasin import Magasin
 from tarif import Tarif
-from pandas import read_excel,concat,ExcelWriter
+from pandas import read_excel
 import os
 import threading
 from verif import License
@@ -21,33 +23,36 @@ class VerifFrame(customtkinter.CTkFrame):
         super().__init__(master)
         self.master=master
         self.verif=None
-        self.f1 = customtkinter.CTkFrame(master)
-        
-        self.tv = customtkinter.CTkLabel(self.f1,text='Verification de la license en cours...').pack()
-        self.pb = customtkinter.CTkProgressBar(self.f1,width=300).pack(side='bottom')
-        self.f1.winfo_children()[-1].set(0)
+        self.license = License()
+        self.f1=customtkinter.CTkFrame(self.master)
+        customtkinter.CTkLabel(self.f1,text='Vérification de license en cours...').pack()
         self.f1.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
+        self.process()
 
-        self.verif = License()
-        self.t = threading.Thread(target=self.verif.launch)
-        self.t.start()
-        self.launch_verif()
-       
-        
-    def launch_verif(self):
-        if self.verif.progress==1:
-            self.f1.winfo_children()[-1].set(self.verif.progress)
-            if self.verif.valid:
-                self.f1.destroy()
-                self.destroy()
-                self.master.verify_ok()
-            else:
-                self.f1.destroy()
-                self.txt=customtkinter.CTkLabel(self.master,text="Vous n'avez plus accés au logiciel, merci de contacter son créateur.")
-                self.txt.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
+
+    def process(self):
+        self.license.open_license()
+        if self.license.valid:
+            self.f1.destroy()
+            self.master.verify_ok()
         else:
-            self.f1.winfo_children()[-1].set(self.verif.progress)
-            self.after(200,self.launch_verif)
+            self.f1.winfo_children()[-1].destroy()
+            customtkinter.CTkLabel(self.f1,text='Veuillez écrire la license.').pack(side='top',pady=(5,5))
+            customtkinter.CTkLabel(self.f1,text='Format: 1234-5678-ABCD-EFGH').pack(side='top',pady=(5,10))
+            customtkinter.CTkEntry(self.f1,width=250).pack(side='top',pady=(10,10))
+            customtkinter.CTkButton(self.f1,text='Valider',command=self.validate_license).pack(side='bottom')
+
+    def validate_license(self):
+        license = self.f1.winfo_children()[2].get()
+        if self.license.check_license(license):
+            self.license.set_license(license)
+            self.f1.destroy()
+            self.master.verify_ok()
+        else:
+            if not isinstance(self.f1.winfo_children()[-1],customtkinter.CTkLabel):
+                customtkinter.CTkLabel(self.f1,text='License Incorrecte').pack(side='top',pady=(5,5))
+
+
 class LaunchFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
@@ -102,7 +107,6 @@ class MainFrame(customtkinter.CTkFrame):
 
     def configure(self):
         
-
         entrepot=set(self.master.excel['ENTREPOT'])
         self.excel_list=[]
         for e in entrepot:
@@ -115,7 +119,7 @@ class MainFrame(customtkinter.CTkFrame):
             if self.master.type=='FOURNISSEUR':
                 if commande_type == "Tarif":self.p.append(Tarif(e[0],e[1]))
                 else:
-                    self.p.append(Fournisseur(self.master.excel,e[1]))
+                    self.p.append(Fournisseur(e[0],e[1]))
                     self.p[-1].ffi = commande_type
             if self.master.type=='MAGASIN':self.p.append(Magasin(e[0],e[1]))
         print("Chrome started")
@@ -157,22 +161,14 @@ class MainFrame(customtkinter.CTkFrame):
             for process in self.p:
                 self.th = threading.Thread(target=process.setup)
                 self.t.append(self.th)
-                self.th.start()
             self.update_pb()
-            
-            #t = threading.Thread(target=self.writting_rapport)
-            #t.start()
-            
-    def writting_rapport(self):
-        for thread in self.t:
-            thread.join()
-        self.master.excel.to_excel('Rapport.xlsx')
     
     def update_pb(self):
         
         ps=sum([int(pro.ps) for pro in self.p])
         self.pb.set(ps/self.pas)
         self.f3.winfo_children()[-1].configure(text=f"Produit saisie: {ps}")
+        self.master.excel.to_excel('Rapport.xlsx')
         self.after(2000,self.update_pb)
                                                
         
@@ -190,9 +186,11 @@ class MainWindow(customtkinter.CTk):
         
         self.launch_stated=False
         self.my_frame = VerifFrame(self)
+
+
+
     def verify_ok(self):
         #destroy verify frame here
-        
         
         self.my_frame = LaunchFrame(self)
         self.verify()

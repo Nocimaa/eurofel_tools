@@ -15,7 +15,7 @@ class Fournisseur():
         
         self.main_excel=excel
         self.service=ChromeService('chromedriver')
-        self.service.creation_flags= CREATE_NO_WINDOW
+        if os.name == 'nt':self.service.creation_flags= CREATE_NO_WINDOW
         options = Options()
         #options.add_argument('--headless=new')
         self.browser= webdriver.Chrome(service=self.service,options=options)  
