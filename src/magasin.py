@@ -95,6 +95,7 @@ class Magasin():
             self.waiting_system()
             self.input_market(exc)
             self.waiting_system()
+        self.browser.close()
     def create_fp(self,exc):
         cur = exc.iloc[0]
         self.write(Keys.F6)

@@ -12,14 +12,14 @@ from selenium.webdriver.chrome.options import Options
 class Fournisseur():
     def __init__(self,excel,entrepot):
         
-        
+        self.main_excel=excel
         self.service=ChromeService('chromedriver')
         self.service.creation_flags= CREATE_NO_WINDOW
         options = Options()
         #options.add_argument('--headless=new')
         self.browser= webdriver.Chrome(service=self.service,options=options)  
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
-        self.excel = excel
+        self.excel = self.main_excel[self.main_excel['ENTREPOT']==entrepot]
         self.action=ActionChains(self.browser)
         self.credentials= ["FRUBY5G","Mathieu2"]
         self.ffi = "F"
@@ -177,6 +177,8 @@ class Fournisseur():
             self.suppr(6)
             if int(cur['QUANTITE'])==0:
                 i+=1
+                self.ps+=1
+                #self.main_excel[self.main_excel['IFLS']==cur['IFLS'] and self.main_excel['ENTREPOT'] == self.entrepot] = 'Ko: Quantity 0'
                 continue    
             self.ifls_input(cur['IFLS'])
             if cur['IFLS']==self.get_first_item():
@@ -184,12 +186,14 @@ class Fournisseur():
             else:
                 if self.import_ifls(cur['IFLS']):
                     print(f"Cannot import: {self.entrepot} {cur['IFLS']}, {cur['FOURNISSEUR']}")
-                    self.excel.loc[self.excel['IFLS']==cur['IFLS'],'Status']='Ko'
+                    #self.excel[self.excel['IFLS']==cur['IFLS']]='Ko'
+                    #self.main_excel[self.main_excel['IFLS']==cur['IFLS'] and self.main_excel['ENTREPOT'] == self.entrepot] = 'Ko: Product cannot be imported'
                     i+= 1
                     continue
             self.qp_input(str(cur['QUANTITE']),str(cur['PRIX']))
             i+=1
-            self.excel.loc[self.excel['IFLS']==cur['IFLS'],'Status']='Ok'
+            #self.excel[self.excel['IFLS']==cur['IFLS']]['Status']='Ok'
+            #self.main_excel[self.main_excel['IFLS']==cur['IFLS'] and self.main_excel['ENTREPOT'] == self.entrepot] = 'Ok'
             self.ps+=1
     def init(self,code):
         #f1_system()
@@ -229,7 +233,7 @@ class Fournisseur():
             self.waiting_system()
             self.write(Keys.F3)
             self.waiting_system()
-
+        self.browser.close()
     def full_process(self,entrepot):
         self.loggin()
         self.choose_bassin(self.etb[entrepot])

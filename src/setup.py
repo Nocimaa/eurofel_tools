@@ -1,13 +1,17 @@
-import sys
+#%%
 import os
 from cx_Freeze import setup,Executable
 
-files = ["img/excel.ico"]
+relative_path="C:/Users/garreaum/Documents/GitHub/eurofel_tools/src/"
+
+files = [relative_path+"img/excel.ico"]
+
+
 
 target = Executable(
-    script="eurofel_v2.py",
-    base="Win32GUI-cpython-39-darwin",
-    icon="img/excel.ico"
+    script=relative_path+"eurofel_v2.py",
+    base="Win32GUI",
+    icon=relative_path+"img/excel.ico"
 )
 setup(
     name="EuroPy",
@@ -17,3 +21,4 @@ setup(
     options={"build_exe":{"include_files":files}},
     executables=[target]
 )
+# %%

@@ -7,13 +7,11 @@
 
 import tkinter
 import customtkinter
-from selenium import webdriver
 from PIL import Image
 from fournisseur import Fournisseur
 from magasin import Magasin
 from tarif import Tarif
-from pandas import read_excel
-from selenium.webdriver.chrome.service import Service as ChromeService
+from pandas import read_excel,concat,ExcelWriter
 from subprocess import CREATE_NO_WINDOW
 import threading
 from verif import License
@@ -105,6 +103,7 @@ class MainFrame(customtkinter.CTkFrame):
 
     def configure(self):
         
+
         entrepot=set(self.master.excel['ENTREPOT'])
         self.excel_list=[]
         for e in entrepot:
@@ -117,7 +116,7 @@ class MainFrame(customtkinter.CTkFrame):
             if self.master.type=='FOURNISSEUR':
                 if commande_type == "Tarif":self.p.append(Tarif(e[0],e[1]))
                 else:
-                    self.p.append(Fournisseur(e[0],e[1]))
+                    self.p.append(Fournisseur(self.master.excel,e[1]))
                     self.p[-1].ffi = commande_type
             if self.master.type=='MAGASIN':self.p.append(Magasin(e[0],e[1]))
         print("Chrome started")
@@ -155,21 +154,29 @@ class MainFrame(customtkinter.CTkFrame):
         else:
             self.but.configure(text="Arreter")
             #Appel fonction demmarage
-            print("ok")
             self.stared=True
             for process in self.p:
                 self.th = threading.Thread(target=process.setup)
                 self.t.append(self.th)
                 self.th.start()
-            print("ok")
             self.update_pb()
+            
+            #t = threading.Thread(target=self.writting_rapport)
+            #t.start()
+            
+    def writting_rapport(self):
+        for thread in self.t:
+            thread.join()
+        exc = self.excel_list[0]
+        for i in range(1,len(self.excel_list)):
+            exc = concat(exc,self.excel_list[i])
+        exc.to_excel('Rapport.xlsx')
     
     def update_pb(self):
         
         ps=sum([int(pro.ps) for pro in self.p])
         self.pb.set(ps/self.pas)
         self.f3.winfo_children()[-1].configure(text=f"Produit saisie: {ps}")
-        self.master.excel.to_excel('Rapport.xlsx')
         self.after(2000,self.update_pb)
                                                
         

@@ -7,7 +7,6 @@ from subprocess import CREATE_NO_WINDOW
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from pandas import read_excel
-excel=read_excel('carrefour.fournisseur 110823.xlsx', sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
 #%%
 class Tarif():
     def __init__(self,excel,entrepot):
