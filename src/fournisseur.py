@@ -1,5 +1,4 @@
 #%%
-import threading
 import time
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -173,12 +172,12 @@ class Fournisseur():
             if int(cur['QUANTITE'])==0:
                 i+=1
                 self.ps+=1
-                self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']=='019970'),'Status']='Quantité 0'
+                self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Quantité 0'
                 continue  
             if float(cur['PRIX'].replace(',','.'))==0:
                 i+=1
                 #Ecrire Ko
-                self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']=='019970'),'Status']='Ko: Prix Zéro'
+                self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ko: Prix Zéro'
                 continue  
             self.ifls_input(cur['IFLS'])
             if cur['IFLS']==self.get_first_item():
@@ -186,12 +185,12 @@ class Fournisseur():
             else:
                 if self.import_ifls(cur['IFLS']):
                     print(f"Cannot import: {self.entrepot} {cur['IFLS']}, {cur['FOURNISSEUR']}")
-                    self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']=='019970'),'Status']='Ko: Cannot Be imported'
+                    self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ko: Cannot Be imported'
                     i+= 1
                     continue
             self.qp_input(str(cur['QUANTITE']),str(cur['PRIX']))
             i+=1
-            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']=='019970'),'Status']='Ok'
+            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ok'
             self.ps+=1
     def init(self,code):
         #f1_system()
@@ -239,6 +238,7 @@ class Fournisseur():
             self.write(Keys.F3)
             self.waiting_system()
         self.browser.close()
+        self.main_excel.to_excel('Rapport.xlsx')
     def full_process(self,entrepot):
         self.loggin()
         self.choose_bassin(self.etb[entrepot])

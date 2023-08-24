@@ -1,6 +1,4 @@
 #%%
-#Si valeur a 0 alors passé a la suivante sinon erreur de saisie
-#SI code fournisseur inexistant passé a 0
 #Faire le rapport un jours aussi mdrrrrr
 
 
@@ -11,7 +9,7 @@ from PIL import Image
 from fournisseur import Fournisseur
 from magasin import Magasin
 from tarif import Tarif
-from pandas import read_excel
+from pandas import read_excel,concat,ExcelWriter
 import os
 import threading
 from verif import License
@@ -24,16 +22,19 @@ class VerifFrame(customtkinter.CTkFrame):
         self.master=master
         self.verif=None
         self.license = License()
-        self.f1=customtkinter.CTkFrame(self.master)
+        self.f1=customtkinter.CTkFrame(self)
         customtkinter.CTkLabel(self.f1,text='Vérification de license en cours...').pack()
         self.f1.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
+        
+        
+        
+    def start_process(self):
         self.process()
-
-
+       
     def process(self):
         self.license.open_license()
         if self.license.valid:
-            self.f1.destroy()
+            self.destroy()
             self.master.verify_ok()
         else:
             self.f1.winfo_children()[-1].destroy()
@@ -46,13 +47,12 @@ class VerifFrame(customtkinter.CTkFrame):
         license = self.f1.winfo_children()[2].get()
         if self.license.check_license(license):
             self.license.set_license(license)
-            self.f1.destroy()
+            self.destroy()
             self.master.verify_ok()
         else:
             if not isinstance(self.f1.winfo_children()[-1],customtkinter.CTkLabel):
-                customtkinter.CTkLabel(self.f1,text='License Incorrecte').pack(side='top',pady=(5,5))
-
-
+                customtkinter.CTkLabel(self.f1,text='License Incorrecte').pack(side='top',pady=(5,5))    
+    
 class LaunchFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
@@ -70,16 +70,15 @@ class LaunchFrame(customtkinter.CTkFrame):
         
         self.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
     
-        self.invert_excel_text()
 
-
+    def start_verify(self):self.master.verify()
     def invert_excel_text(self):
         if self.master.file!=None:
             self.winfo_children()[-1].configure(text="Loaded",text_color="green")
             self.master.launch_stated = True
         else:
             self.winfo_children()[-1].configure(text_color="red",text="Not Loaded")
-            self.after(2000,self.invert_excel_text)
+            #self.after(2000,self.invert_excel_text)
 
 
     #Will verify the excel
@@ -107,6 +106,7 @@ class MainFrame(customtkinter.CTkFrame):
 
     def configure(self):
         
+
         entrepot=set(self.master.excel['ENTREPOT'])
         self.excel_list=[]
         for e in entrepot:
@@ -119,10 +119,9 @@ class MainFrame(customtkinter.CTkFrame):
             if self.master.type=='FOURNISSEUR':
                 if commande_type == "Tarif":self.p.append(Tarif(e[0],e[1]))
                 else:
-                    self.p.append(Fournisseur(e[0],e[1]))
+                    self.p.append(Fournisseur(self.master.excel,e[1]))
                     self.p[-1].ffi = commande_type
             if self.master.type=='MAGASIN':self.p.append(Magasin(e[0],e[1]))
-        print("Chrome started")
         self.switch()
         
     def switch(self):
@@ -157,18 +156,22 @@ class MainFrame(customtkinter.CTkFrame):
         else:
             self.but.configure(text="Arreter")
             #Appel fonction demmarage
-            self.stared=True
+            self.started=True
             for process in self.p:
                 self.th = threading.Thread(target=process.setup)
                 self.t.append(self.th)
+                self.th.start()
             self.update_pb()
+            
+            #t = threading.Thread(target=self.writting_rapport)
+            #t.start()
+            
     
     def update_pb(self):
         
         ps=sum([int(pro.ps) for pro in self.p])
         self.pb.set(ps/self.pas)
         self.f3.winfo_children()[-1].configure(text=f"Produit saisie: {ps}")
-        self.master.excel.to_excel('Rapport.xlsx')
         self.after(2000,self.update_pb)
                                                
         
@@ -186,29 +189,29 @@ class MainWindow(customtkinter.CTk):
         
         self.launch_stated=False
         self.my_frame = VerifFrame(self)
-
-
-
+        self.my_frame.start_process()
+        
     def verify_ok(self):
         #destroy verify frame here
-        
         self.my_frame = LaunchFrame(self)
-        self.verify()
+        self.my_frame.start_verify()
         
     def loadExcel(self):
         try:self.file=tkinter.filedialog.askopenfile(title="Select excel file",initialdir='./',filetypes=(("Excel files", ".xlsx .xls"),))
         except:pass
         try:self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
         except:pass
-        #self.excel['Status']=''
+        self.excel['Status']=''
         try:
             self.excel['DATE']
             self.type='FOURNISSEUR'
+            self.launch_stated=True
             return
         except:pass
         try:
             self.excel['JOUR']
             self.type='MAGASIN'
+            self.launch_stated=True
             return
         except:pass
         self.excel=None
@@ -217,16 +220,14 @@ class MainWindow(customtkinter.CTk):
         if self.launch_stated:
             self.my_frame.destroy()
             self.my_frame=MainFrame(self)
-        else:self.after(1000,self.verify)
+            return
+        self.my_frame.invert_excel_text()
+        self.after(1000,self.verify)
       
 
-
-#if "yes" in requests.get("http://pourmacherie.love",allow_redirects=True,verify=False).content.decode():
 App = MainWindow()
 App.mainloop()
-#else:
-#   print("Accés refusé")
- # "  print("Le créateur vous a refusé l'accés merci de le contacter")
+
 
 
 # %%
