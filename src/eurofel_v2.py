@@ -217,7 +217,7 @@ class MainWindow(customtkinter.CTk):
         if self.launch_stated:
             self.my_frame.destroy()
             self.my_frame=MainFrame(self)
-        if isinstance(self.my_frame,LaunchFrame):self.after(1000,self.verify)
+        else:self.after(1000,self.verify)
       
 
 
