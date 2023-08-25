@@ -14,7 +14,7 @@ from selenium import webdriver
 
 #%%
 class Magasin():
-    def __init__(self,excel,entrepot):
+    def __init__(self,main_excel,entrepot):
         
         
         self.service=ChromeService('chromedriver')
@@ -22,7 +22,8 @@ class Magasin():
         self.browser= webdriver.Chrome(service=self.service)
         self.browser.minimize_window()
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
-        self.excel = excel
+        self.main_excel = main_excel
+        self.excel = main_excel[main_excel['ENTREPOT']==entrepot]
         self.action=ActionChains(self.browser)
         self.credentials= ["FRUBY5G","Mathieu2"]
 
@@ -98,6 +99,7 @@ class Magasin():
             self.input_market(exc)
             self.waiting_system()
         self.browser.close()
+        self.main_excel.to_excel('Rapport Magasin.xlsx')
     def create_fp(self,exc):
         cur = exc.iloc[0]
         self.write(Keys.F6)
@@ -108,7 +110,7 @@ class Magasin():
         self.write(cur['IFLS'])
         self.enter()
         if self.get_first_imported() != cur['IFLS']:
-            print("Cannot im", cur['IFLS'])
+            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ko: IFLS cannot be used'
             self.write(Keys.F3)
             self.waiting_system()
             self.write(Keys.F3)
@@ -126,7 +128,7 @@ class Magasin():
         self.enter()
         self.waiting_system()
         if len(self.browser.execute_script("return document.getElementsByClassName('NWHITE');"))!= 5:
-            print("Cannot im", cur['IFLS'])
+            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ko: IFLS cannot be used'
             self.write(Keys.F3)
             self.waiting_system()
             return False
@@ -135,6 +137,7 @@ class Magasin():
         return True    
     def input_market(self,exc):
         t=dict(zip(exc['MAGASIN'],exc['QUANTITE']))
+        ifls = exc.iloc[0]['IFLS']
         while len(t.keys())!=0:
             h=self.browser.execute_script("return document.getElementsByClassName('NGREEN');")
             self.tab(1)
@@ -159,6 +162,7 @@ class Magasin():
         self.waiting_system()
         self.write(Keys.F3)
         self.waiting_system()
+        self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ok'
     def full_process(self,entrepot):
         self.loggin()
         self.choose_bassin(self.etb[entrepot])

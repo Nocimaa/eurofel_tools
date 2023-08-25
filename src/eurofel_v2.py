@@ -9,7 +9,7 @@ from PIL import Image
 from fournisseur import Fournisseur
 from magasin import Magasin
 from tarif import Tarif
-from pandas import read_excel,concat,ExcelWriter
+from pandas import read_excel
 import os
 import threading
 from verif import License
@@ -22,19 +22,17 @@ class VerifFrame(customtkinter.CTkFrame):
         self.master=master
         self.verif=None
         self.license = License()
-        self.f1=customtkinter.CTkFrame(self)
-        customtkinter.CTkLabel(self.f1,text='Vérification de license en cours...').pack()
+        self.f1=customtkinter.CTkFrame(master)
+        customtkinter.CTkLabel(self.f1,text='Vérification de license en cours...',text_color='white').pack()
         self.f1.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
         
         
-        
-    def start_process(self):
-        self.process()
+    def start_process(self):self.process()
        
     def process(self):
         self.license.open_license()
         if self.license.valid:
-            self.destroy()
+            self.f1.destroy()
             self.master.verify_ok()
         else:
             self.f1.winfo_children()[-1].destroy()
@@ -47,7 +45,7 @@ class VerifFrame(customtkinter.CTkFrame):
         license = self.f1.winfo_children()[2].get()
         if self.license.check_license(license):
             self.license.set_license(license)
-            self.destroy()
+            self.f1.destroy()
             self.master.verify_ok()
         else:
             if not isinstance(self.f1.winfo_children()[-1],customtkinter.CTkLabel):
@@ -57,7 +55,7 @@ class LaunchFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
         self.master=master
-        self.img=[Image.open("img/excel.ico")]
+        self.img=[Image.open("./excel.ico")]
         
         
         #Excel Image
@@ -117,11 +115,11 @@ class MainFrame(customtkinter.CTkFrame):
         
         for e in self.excel_list:
             if self.master.type=='FOURNISSEUR':
-                if commande_type == "Tarif":self.p.append(Tarif(e[0],e[1]))
+                if commande_type == "Tarif":self.p.append(Tarif(self.master.excel,e[1]))
                 else:
                     self.p.append(Fournisseur(self.master.excel,e[1]))
                     self.p[-1].ffi = commande_type
-            if self.master.type=='MAGASIN':self.p.append(Magasin(e[0],e[1]))
+            if self.master.type=='MAGASIN':self.p.append(Magasin(self.master.excel,e[1]))
         self.switch()
         
     def switch(self):
@@ -189,6 +187,7 @@ class MainWindow(customtkinter.CTk):
         
         self.launch_stated=False
         self.my_frame = VerifFrame(self)
+        
         self.my_frame.start_process()
         
     def verify_ok(self):

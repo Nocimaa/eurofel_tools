@@ -238,7 +238,7 @@ class Fournisseur():
             self.write(Keys.F3)
             self.waiting_system()
         self.browser.close()
-        self.main_excel.to_excel('Rapport.xlsx')
+        self.main_excel.to_excel('Rapport Fournisseur.xlsx')
     def full_process(self,entrepot):
         self.loggin()
         self.choose_bassin(self.etb[entrepot])

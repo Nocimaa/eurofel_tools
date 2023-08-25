@@ -18,7 +18,8 @@ class Tarif():
         options = Options()
         self.browser= webdriver.Chrome(service=self.service,options=options)  
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
-        self.excel = excel
+        self.main_excel = excel
+        self.excel = self.main_excel[self.main_excel['ENTREPOT']==entrepot]
         self.action=ActionChains(self.browser)
         self.credentials= ["FRUBY5G","Mathieu2"]
 
@@ -107,7 +108,7 @@ class Tarif():
         if self.get_first_imported()!= ifls:
             self.write(Keys.F3)
             self.tab(5)
-            print("Cannot create tarif for ", ifls)
+            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ko'
             return
         self.tab(9)
         self.write('1')
@@ -120,17 +121,21 @@ class Tarif():
         self.enter()
         if not self.verif_tarif():
             print("Cannot create tarif for ", ifls)
+            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ko'
             return                
         self.enter()
         self.waiting_system()
         self.write(Keys.F3)
         self.ps+=1
+        self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ok'
         self.waiting_system()
     
     def setup(self):
         self.full_process(self.entrepot)
         for ifls in set(self.excel['IFLS']):
             self.tarif(ifls)
+        self.browser.close()
+        self.main_excel.to_excel('Rapport Tarif.xlsx')
         
     def full_process(self,entrepot):
         self.loggin()
