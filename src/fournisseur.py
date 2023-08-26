@@ -20,6 +20,7 @@ class Fournisseur():
         self.browser= webdriver.Chrome(service=self.service,options=options)  
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
         self.excel = self.main_excel[self.main_excel['ENTREPOT']==entrepot]
+        self.excel = self.excel.sort_values(by=['FOURNISSEUR','IFLS'])
         self.action=ActionChains(self.browser)
         self.credentials= ["FRUBY5G","Mathieu2"]
         self.ffi = "F"
@@ -162,11 +163,8 @@ class Fournisseur():
     
     def starte(self,df):
         i=0
-        #f1_system()
         while i<len(df):
             cur=df.iloc[i]
-            #print(f"{i}: {self.entrepot} {cur['IFLS']} {cur['FOURNISSEUR']}")
-            #f1_system()
             self.waiting_system()
             self.suppr(6)
             if int(cur['QUANTITE'])==0:

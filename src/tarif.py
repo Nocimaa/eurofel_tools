@@ -20,6 +20,7 @@ class Tarif():
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
         self.main_excel = excel
         self.excel = self.main_excel[self.main_excel['ENTREPOT']==entrepot]
+        self.excel = self.excel.sort_values(by=['IFLS'])
         self.action=ActionChains(self.browser)
         self.credentials= ["FRUBY5G","Mathieu2"]
 

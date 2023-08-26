@@ -24,6 +24,7 @@ class Magasin():
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
         self.main_excel = main_excel
         self.excel = main_excel[main_excel['ENTREPOT']==entrepot]
+        self.excel = self.excel.sort_values(by=['MAGASIN','IFLS'])
         self.action=ActionChains(self.browser)
         self.credentials= ["FRUBY5G","Mathieu2"]
 
