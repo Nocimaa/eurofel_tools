@@ -8,6 +8,9 @@ if os.name == 'nt': from subprocess import CREATE_NO_WINDOW
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from pandas import read_excel
+import datetime
+
+#excel=read_excel('carrefour.fournisseur 260823.xlsx', sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
 #%%
 class Tarif():
     def __init__(self,excel,entrepot):
@@ -36,7 +39,12 @@ class Tarif():
         self.ps=0
 
         self.etb={"175":"901","729":"961","774":"961"}
-
+        if entrepot!='175':
+            date = datetime.date(int(self.date[:4]),int(self.date[2:4]),int(self.date[:2]))
+            date = date+datetime.timedelta(1)
+            if date.weekday==5:            
+                date = date+datetime.timedelta(1)
+            self.date=date.strftime('%d%m%y')
     #Process
     def enter(self):
         self.action.send_keys(Keys.ENTER)
