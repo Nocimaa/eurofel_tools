@@ -10,7 +10,7 @@ from selenium.webdriver.chrome.options import Options
 from pandas import read_excel
 import datetime
 
-#excel=read_excel('carrefour.fournisseur 260823.xlsx', sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
+excel=read_excel('carrefour.fournisseur 260823.xlsx', sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
 #%%
 class Tarif():
     def __init__(self,excel,entrepot):
@@ -108,6 +108,10 @@ class Tarif():
                     return False
             except:pass
     def tarif(self,ifls):
+        if int(self.excel[self.excel['IFLS']==ifls]['QUANTITE'])==0:
+            print('Cannot create tarif')
+            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ko: Quantity Zero
+            return
         self.write(self.date)
         self.write(Keys.F4)
         self.waiting_system()
@@ -117,7 +121,7 @@ class Tarif():
         if self.get_first_imported()!= ifls:
             self.write(Keys.F3)
             self.tab(5)
-            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ko'
+            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ko: IFLS cannot be found.'
             return
         self.tab(9)
         self.write('1')
@@ -130,7 +134,7 @@ class Tarif():
         self.enter()
         if not self.verif_tarif():
             print("Cannot create tarif for ", ifls)
-            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ko'
+            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ko: Aucune commande trouvé concernant cet IFLS'
             return                
         self.enter()
         self.waiting_system()
