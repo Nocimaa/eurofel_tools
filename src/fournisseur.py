@@ -9,7 +9,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 class Fournisseur():
-    def __init__(self,excel,entrepot):
+    def __init__(self,excel,entrepot,credentials):
         
         self.main_excel=excel
         self.service=ChromeService()
@@ -21,7 +21,7 @@ class Fournisseur():
         self.excel = self.main_excel[self.main_excel['ENTREPOT']==entrepot]
         self.excel = self.excel.sort_values(by=['IFLS'])
         self.action=ActionChains(self.browser)
-        self.credentials= ["FRAECXM","OLYMPEN1"]
+        self.credentials=credentials
         self.ffi = "Ferme"
 
         self.start=False
@@ -252,16 +252,16 @@ class Fournisseur():
         
         
     def loggin(self):
-        self.write(self.credentials[0])
+        self.write(self.credentials.username)
         self.tab(1)
-        self.write(self.credentials[1])
+        self.write(self.credentials.passwd)
         self.enter()
         self.waiting_system()
         time.sleep(4)
         while self.verif()==0:
             self.enter()
             self.waiting_system()
-        self.write(self.credentials[0])
+        self.write(self.credentials.secndpasswd)
         self.enter()
         self.waiting_system()
 

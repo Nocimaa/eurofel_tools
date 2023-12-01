@@ -9,6 +9,7 @@ from PIL import Image
 from fournisseur import Fournisseur
 from magasin import Magasin
 from tarif import Tarif
+from credentials import Credentials
 from pandas import read_excel
 import os
 import threading
@@ -16,6 +17,34 @@ from verif import License
 if os.name == 'nt': from subprocess import CREATE_NO_WINDOW
 #Main Windows
 #Frame
+class CredentialsFrame(customtkinter.CTkFrame):
+    def __init__(self,master):
+        super().__init__(master)
+        self.master=master
+        self.f1=customtkinter.CTkFrame(master)
+        customtkinter.CTkLabel(self.f1,text='Chargement des logins...',text_color='white').pack()
+        self.f1.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
+        
+    def process(self):
+        if self.master.credentials.fileExist():
+            self.master.credentials.getCred()
+            self.f1.destroy()
+            self.master.cred_ok()
+        else:
+            self.f1.winfo_children()[-1].destroy()
+            customtkinter.CTkEntry(self.f1, placeholder_text="Username").pack(side='top',pady=(5,5))
+            customtkinter.CTkEntry(self.f1, placeholder_text="First Password").pack(side='top',pady=(5,5))
+            customtkinter.CTkEntry(self.f1, placeholder_text="Second Password").pack(side='top',pady=(5,5))
+            customtkinter.CTkButton(self.f1, text="Valider", command=self.register).pack(side='top',pady=(5,5))
+    
+    def register(self):
+        username = self.f1.winfo_children()[0].get()
+        firstpasswd = self.f1.winfo_children()[1].get()
+        secondpasswd = self.f1.winfo_children()[2].get()
+        self.master.credentials.setCred(username, firstpasswd, secondpasswd)
+        self.master.credentials.getCred()
+        self.f1.destroy()
+        self.master.cred_ok()
 class VerifFrame(customtkinter.CTkFrame):
     def __init__(self,master):
         super().__init__(master)
@@ -117,9 +146,9 @@ class MainFrame(customtkinter.CTkFrame):
             if self.master.type=='FOURNISSEUR':
                 if commande_type == "Tarif":self.p.append(Tarif(self.master.excel,e[1]))
                 else:
-                    self.p.append(Fournisseur(self.master.excel,e[1]))
+                    self.p.append(Fournisseur(self.master.excel,e[1], self.master.credentials))
                     self.p[-1].ffi = commande_type
-            if self.master.type=='MAGASIN':self.p.append(Magasin(self.master.excel,e[1]))
+            if self.master.type=='MAGASIN':self.p.append(Magasin(self.master.excel,e[1],self.master.credentials))
         self.switch()
         
     def switch(self):
@@ -184,13 +213,16 @@ class MainWindow(customtkinter.CTk):
         self.file=None
         self.excel=None
         self.type=''
-        
+        self.credentials = Credentials() 
         self.launch_stated=False
         self.my_frame = VerifFrame(self)
         
         self.my_frame.start_process()
-        
+    
     def verify_ok(self):
+        self.my_frame = CredentialsFrame(self)
+        self.my_frame.process()
+    def cred_ok(self):
         #destroy verify frame here
         self.my_frame = LaunchFrame(self)
         self.my_frame.start_verify()

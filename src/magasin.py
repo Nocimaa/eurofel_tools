@@ -14,7 +14,7 @@ from pandas import read_excel
 
 #%%
 class Magasin():
-    def __init__(self,main_excel,entrepot):
+    def __init__(self,main_excel,entrepot,credentials):
         
         
         self.service=ChromeService('chromedriver')
@@ -26,7 +26,7 @@ class Magasin():
         self.excel = main_excel[main_excel['ENTREPOT']==entrepot]
         self.excel = self.excel.sort_values(by=['MAGASIN','IFLS'])
         self.action=ActionChains(self.browser)
-        self.credentials= ["FRUBY5G","Antoine1"]
+        self.credentials= credentials
 
         self.start=False
         self.state=False
@@ -184,16 +184,16 @@ class Magasin():
         self.action.perform()
         self.waiting_system()       
     def loggin(self):
-        self.write(self.credentials[0])
+        self.write(self.credentials.username)
         self.tab(1)
-        self.write(self.credentials[1])
+        self.write(self.credentials.passwd)
         self.enter()
         self.waiting_system()
         time.sleep(5)
         while self.verif()==0:
             self.enter()
             self.waiting_system()
-        self.write(self.credentials[0])
+        self.write(self.credentials.secndpasswd)
         self.enter()
         self.waiting_system()
     def choose_bassin(self,bassin):

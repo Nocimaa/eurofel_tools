@@ -13,7 +13,7 @@ import datetime
 #excel=read_excel('carrefour.magasin test.xlsx', sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
 #%%
 class Tarif():
-    def __init__(self,excel,entrepot):
+    def __init__(self,excel,entrepot, credentials):
         
         
         self.service=ChromeService('chromedriver')
@@ -25,7 +25,7 @@ class Tarif():
         self.excel = self.main_excel[self.main_excel['ENTREPOT']==entrepot]
         self.excel = self.excel.sort_values(by=['IFLS'])
         self.action=ActionChains(self.browser)
-        self.credentials= ["FRUBY5G","Antoine1"]
+        self.credentials= credentials
 
         self.start=False
         self.state=False
@@ -167,16 +167,16 @@ class Tarif():
         
         
     def loggin(self):
-        self.write(self.credentials[0])
+        self.write(self.credentials.username)
         self.tab(1)
-        self.write(self.credentials[1])
+        self.write(self.credentials.passwd)
         self.enter()
         self.waiting_system()
         time.sleep(5)
         while self.verif()==0:
             self.enter()
             self.waiting_system()
-        self.write(self.credentials[0])
+        self.write(self.credentials.secndpasswd)
         self.enter()
         self.waiting_system()
 
