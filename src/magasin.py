@@ -7,10 +7,10 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 import os
 if os.name == 'nt': from subprocess import CREATE_NO_WINDOW
 from selenium import webdriver
-
+from pandas import read_excel
 #%%
 
-
+#excel=read_excel('carrefour.magasin test.xlsx', sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
 
 #%%
 class Magasin():
@@ -26,7 +26,7 @@ class Magasin():
         self.excel = main_excel[main_excel['ENTREPOT']==entrepot]
         self.excel = self.excel.sort_values(by=['MAGASIN','IFLS'])
         self.action=ActionChains(self.browser)
-        self.credentials= ["FRUBY5G","Mathieu2"]
+        self.credentials= ["FRUBY5G","Antoine1"]
 
         self.start=False
         self.state=False
@@ -34,7 +34,8 @@ class Magasin():
         self.entrepot=entrepot
         self.secteur="12" if entrepot == "175" else "2"
         self.date=self.excel.iloc[0]['JOUR']
-        self.ifls_set=set(self.excel['IFLS'])
+        self.ifls_set=list(set(self.excel['IFLS']))
+        self.ifls_set.sort()
 
         self.pas=len(self.excel)
         self.ps=0
@@ -130,11 +131,19 @@ class Magasin():
         self.waiting_system()
         if len(self.browser.execute_script("return document.getElementsByClassName('NWHITE');"))!= 5:
             self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ko: IFLS cannot be used'
+            self.tab(1)
+            self.write('N')
             self.write(Keys.F3)
             self.waiting_system()
             return False
         self.enter()
         self.waiting_system()
+        if self.browser.execute_script("return document.getElementsByClassName('NWHITE');")[2].text =='Critères de sélection':
+            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ko: IFLS cannot be used'
+            self.write('N')
+            self.write(Keys.F3)
+            self.waiting_system()
+            return False
         return True    
     def input_market(self,exc):
         t=dict(zip(exc['MAGASIN'],exc['QUANTITE']))

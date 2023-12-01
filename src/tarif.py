@@ -10,7 +10,7 @@ from selenium.webdriver.chrome.options import Options
 from pandas import read_excel
 import datetime
 
-excel=read_excel('carrefour.fournisseur 260823.xlsx', sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
+#excel=read_excel('carrefour.magasin test.xlsx', sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
 #%%
 class Tarif():
     def __init__(self,excel,entrepot):
@@ -25,7 +25,7 @@ class Tarif():
         self.excel = self.main_excel[self.main_excel['ENTREPOT']==entrepot]
         self.excel = self.excel.sort_values(by=['IFLS'])
         self.action=ActionChains(self.browser)
-        self.credentials= ["FRUBY5G","Mathieu2"]
+        self.credentials= ["FRUBY5G","Antoine1"]
 
         self.start=False
         self.state=False
@@ -40,10 +40,11 @@ class Tarif():
 
         self.etb={"175":"901","729":"961","774":"961"}
         if entrepot!='175':
-            date = datetime.date(int(self.date[:4]),int(self.date[2:4]),int(self.date[:2]))
+            date = datetime.date(2000+int(self.date[4:]),int(self.date[2:4]),int(self.date[:2]))
             date = date+datetime.timedelta(1)
-            if date.weekday==5:            
+            if date.weekday()==6:            
                 date = date+datetime.timedelta(1)
+            print(date)
             self.date=date.strftime('%d%m%y')
     #Process
     def enter(self):
@@ -110,7 +111,7 @@ class Tarif():
     def tarif(self,ifls):
         if int(self.excel[self.excel['IFLS']==ifls]['QUANTITE'])==0:
             print('Cannot create tarif')
-            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ko: Quantity Zero
+            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ko: Quantity Zero'
             return
         self.write(self.date)
         self.write(Keys.F4)

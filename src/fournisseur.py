@@ -8,22 +8,21 @@ if os.name == 'nt': from subprocess import CREATE_NO_WINDOW
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-
 class Fournisseur():
     def __init__(self,excel,entrepot):
         
         self.main_excel=excel
-        self.service=ChromeService('chromedriver')
+        self.service=ChromeService()
         if os.name == 'nt':self.service.creation_flags= CREATE_NO_WINDOW
         options = Options()
         #options.add_argument('--headless=new')
         self.browser= webdriver.Chrome(service=self.service,options=options)  
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
         self.excel = self.main_excel[self.main_excel['ENTREPOT']==entrepot]
-        self.excel = self.excel.sort_values(by=['FOURNISSEUR','IFLS'])
+        self.excel = self.excel.sort_values(by=['IFLS'])
         self.action=ActionChains(self.browser)
-        self.credentials= ["FRUBY5G","Mathieu2"]
-        self.ffi = "F"
+        self.credentials= ["FRAECXM","OLYMPEN1"]
+        self.ffi = "Ferme"
 
         self.start=False
         self.state=False
