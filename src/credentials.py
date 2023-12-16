@@ -10,7 +10,7 @@ class Credentials:
     def getCred(self):
         file = open("credentials.erfl", "r")
         self.username = file.readline()
-        self.passwd = file.dline()
+        self.passwd = file.readline()
         self.secndpasswd = file.readline()
         file.close()
     def setCred(self, username, passwd, secndpasswd):

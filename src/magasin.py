@@ -1,5 +1,4 @@
 #%%
-import threading
 import time
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -8,6 +7,7 @@ import os
 if os.name == 'nt': from subprocess import CREATE_NO_WINDOW
 from selenium import webdriver
 from pandas import read_excel
+from selenium.webdriver.chrome.options import Options
 #%%
 
 #excel=read_excel('carrefour.magasin test.xlsx', sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
@@ -17,9 +17,13 @@ class Magasin():
     def __init__(self,main_excel,entrepot,credentials):
         
         
-        self.service=ChromeService('chromedriver')
+        self.service=ChromeService('chromedriver.exe')
         if os.name == 'nt':self.service.creation_flags= CREATE_NO_WINDOW
-        self.browser= webdriver.Chrome(service=self.service)
+        options = Options()
+        #options.add_argument('--headless=new')
+        options.add_argument('--ignore-ssl-errors=yes')
+        options.add_argument('--ignore-certificate-errors')
+        self.browser= webdriver.Chrome(service=self.service,options=options)
         self.browser.minimize_window()
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
         self.main_excel = main_excel
@@ -210,6 +214,7 @@ class Magasin():
     def choose_entrepot(self,entrepot):
         self.write("07")
         self.write(entrepot)
+        self.write(self.etb[entrepot])
         self.enter()
         self.waiting_system()
         self.tab(4)

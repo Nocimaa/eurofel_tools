@@ -123,7 +123,7 @@ class MainFrame(customtkinter.CTkFrame):
      
      
         self.f1 = customtkinter.CTkFrame(master)
-        self.lab=customtkinter.CTkLabel(self.f1,text="Appuyer sur demmarer pour lancer le processus").pack(side="top",pady=(25,25))
+        self.lab=customtkinter.CTkLabel(self.f1,text="Appuyer sur démarer pour lancer le processus").pack(side="top",pady=(25,25))
         self.but=customtkinter.CTkButton(self.f1,text="Démarrer",width=150,height=40,command=lambda :self.configure()).pack()
         self.lab2=customtkinter.CTkLabel(self.f1,text_color="red",text="").pack(side="bottom")
         if self.master.type =='FOURNISSEUR':
@@ -144,7 +144,7 @@ class MainFrame(customtkinter.CTkFrame):
         
         for e in self.excel_list:
             if self.master.type=='FOURNISSEUR':
-                if commande_type == "Tarif":self.p.append(Tarif(self.master.excel,e[1]))
+                if commande_type == "Tarif":self.p.append(Tarif(self.master.excel,e[1], self.master.credentials))
                 else:
                     self.p.append(Fournisseur(self.master.excel,e[1], self.master.credentials))
                     self.p[-1].ffi = commande_type
@@ -229,16 +229,16 @@ class MainWindow(customtkinter.CTk):
         
     def loadExcel(self):
         try:self.file=tkinter.filedialog.askopenfile(title="Select excel file",initialdir='./',filetypes=(("Excel files", ".xlsx .xls"),))
-        except:pass
+        except: pass
         try:self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
-        except:pass
+        except: pass
         self.excel['Status']=''
         try:
             self.excel['DATE']
             self.type='FOURNISSEUR'
             self.launch_stated=True
             return
-        except:pass
+        except: pass
         try:
             self.excel['JOUR']
             self.type='MAGASIN'

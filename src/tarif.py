@@ -7,7 +7,7 @@ import os
 if os.name == 'nt': from subprocess import CREATE_NO_WINDOW
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from pandas import read_excel
+
 import datetime
 
 #excel=read_excel('carrefour.magasin test.xlsx', sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
@@ -16,9 +16,11 @@ class Tarif():
     def __init__(self,excel,entrepot, credentials):
         
         
-        self.service=ChromeService('chromedriver')
+        self.service=ChromeService('chromedriver.exe')
         self.service.creation_flags= CREATE_NO_WINDOW
         options = Options()
+        options.add_argument('--ignore-ssl-errors=yes')
+        options.add_argument('--ignore-certificate-errors')
         self.browser= webdriver.Chrome(service=self.service,options=options)  
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
         self.main_excel = excel
@@ -195,6 +197,7 @@ class Tarif():
     def choose_entrepot(self,entrepot):
         self.write("07")
         self.write(entrepot)
+        self.write(self.etb[entrepot])
         self.enter()
         self.waiting_system()
         self.tab(4)

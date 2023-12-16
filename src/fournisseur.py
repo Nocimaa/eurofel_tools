@@ -12,10 +12,12 @@ class Fournisseur():
     def __init__(self,excel,entrepot,credentials):
         
         self.main_excel=excel
-        self.service=ChromeService()
+        self.service=ChromeService('chromedriver.exe')
         if os.name == 'nt':self.service.creation_flags= CREATE_NO_WINDOW
         options = Options()
         #options.add_argument('--headless=new')
+        options.add_argument('--ignore-ssl-errors=yes')
+        options.add_argument('--ignore-certificate-errors')
         self.browser= webdriver.Chrome(service=self.service,options=options)  
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
         self.excel = self.main_excel[self.main_excel['ENTREPOT']==entrepot]
@@ -280,6 +282,7 @@ class Fournisseur():
     def choose_entrepot(self,entrepot):
         self.write("07")
         self.write(entrepot)
+        self.write(self.etb[entrepot])
         self.enter()
         self.waiting_system()
         self.tab(4)
