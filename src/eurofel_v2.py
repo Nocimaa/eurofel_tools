@@ -9,6 +9,7 @@ from PIL import Image
 from fournisseur import Fournisseur
 from magasin import Magasin
 from tarif import Tarif
+from facturation import Facturation
 from credentials import Credentials
 from pandas import read_excel
 import os
@@ -21,64 +22,33 @@ class CredentialsFrame(customtkinter.CTkFrame):
     def __init__(self,master):
         super().__init__(master)
         self.master=master
-        self.f1=customtkinter.CTkFrame(master)
-        customtkinter.CTkLabel(self.f1,text='Chargement des logins...',text_color='white').pack()
-        self.f1.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
+        customtkinter.CTkLabel(self,text='Chargement des logins...',text_color='white').pack()
+        self.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
         
     def process(self):
         if self.master.credentials.fileExist():
             self.master.credentials.getCred()
-            self.f1.destroy()
+            self.destroy()
             self.master.cred_ok()
         else:
-            self.f1.winfo_children()[-1].destroy()
-            customtkinter.CTkEntry(self.f1, placeholder_text="Username").pack(side='top',pady=(5,5))
-            customtkinter.CTkEntry(self.f1, placeholder_text="First Password").pack(side='top',pady=(5,5))
-            customtkinter.CTkEntry(self.f1, placeholder_text="Second Password").pack(side='top',pady=(5,5))
-            customtkinter.CTkButton(self.f1, text="Valider", command=self.register).pack(side='top',pady=(5,5))
+            self.winfo_children()[-1].destroy()
+            customtkinter.CTkEntry(self, placeholder_text="Username").pack(side='top',pady=(5,5))
+            customtkinter.CTkEntry(self, placeholder_text="First Password").pack(side='top',pady=(5,5))
+            customtkinter.CTkEntry(self, placeholder_text="Second Password").pack(side='top',pady=(5,5))
+            customtkinter.CTkEntry(self, placeholder_text="Facturation Password").pack(side='top',pady=(5,5))
+            customtkinter.CTkButton(self, text="Valider", command=self.register).pack(side='top',pady=(5,5))
     
     def register(self):
-        username = self.f1.winfo_children()[0].get()
-        firstpasswd = self.f1.winfo_children()[1].get()
-        secondpasswd = self.f1.winfo_children()[2].get()
-        self.master.credentials.setCred(username, firstpasswd, secondpasswd)
+        username = self.winfo_children()[0].get()
+        firstpasswd = self.winfo_children()[1].get()
+        secondpasswd = self.winfo_children()[2].get()
+        factpass = self.winfo_children()[3].get()
+        self.master.credentials.setCred(username, firstpasswd, secondpasswd, factpass)
         self.master.credentials.getCred()
-        self.f1.destroy()
+        self.destroy()
         self.master.cred_ok()
-class VerifFrame(customtkinter.CTkFrame):
-    def __init__(self,master):
-        super().__init__(master)
-        self.master=master
-        self.verif=None
-        self.license = License()
-        self.f1=customtkinter.CTkFrame(master)
-        customtkinter.CTkLabel(self.f1,text='Vérification de license en cours...',text_color='white').pack()
-        self.f1.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
-        
-        
-    def start_process(self):self.process()
-       
-    def process(self):
-        self.license.open_license()
-        if self.license.valid:
-            self.f1.destroy()
-            self.master.verify_ok()
-        else:
-            self.f1.winfo_children()[-1].destroy()
-            customtkinter.CTkLabel(self.f1,text='Veuillez écrire la license.').pack(side='top',pady=(5,5))
-            customtkinter.CTkLabel(self.f1,text='Format: 1234-5678-ABCD-EFGH').pack(side='top',pady=(5,10))
-            customtkinter.CTkEntry(self.f1,width=250).pack(side='top',pady=(10,10))
-            customtkinter.CTkButton(self.f1,text='Valider',command=self.validate_license).pack(side='bottom')
 
-    def validate_license(self):
-        license = self.f1.winfo_children()[2].get()
-        if self.license.check_license(license):
-            self.license.set_license(license)
-            self.f1.destroy()
-            self.master.verify_ok()
-        else:
-            if not isinstance(self.f1.winfo_children()[-1],customtkinter.CTkLabel):
-                customtkinter.CTkLabel(self.f1,text='License Incorrecte').pack(side='top',pady=(5,5))    
+
     
 class LaunchFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
@@ -91,11 +61,12 @@ class LaunchFrame(customtkinter.CTkFrame):
         image = customtkinter.CTkImage(self.img[0],size=(50,50))
         customtkinter.CTkLabel(self,image=image,text="").pack(pady=(0,25), expand=True)
         #Excel Button
+
         customtkinter.CTkComboBox(self, values=["Rungis", "Marseille"]).pack(side='bottom')
         customtkinter.CTkButton(self,text="Load Excel",command=lambda :self.master.loadExcel()).pack(side="bottom",pady=(25,25))
+
         #Excel Text
         customtkinter.CTkLabel(self,text="Not Loaded",text_color="red").pack(side="top")
-        
 
 
 
@@ -104,6 +75,8 @@ class LaunchFrame(customtkinter.CTkFrame):
 
     def start_verify(self):self.master.verify()
     def invert_excel_text(self):
+        if (type(self.master.my_frame) != LaunchFrame):
+            return
         if self.master.file!=None:
             self.winfo_children()[3].configure(text="Loaded",text_color="green")
             self.master.launch_stated = True
@@ -125,14 +98,14 @@ class MainFrame(customtkinter.CTkFrame):
         self.t = []
         self.started=False
      
-     
-        self.f1 = customtkinter.CTkFrame(master)
-        self.lab=customtkinter.CTkLabel(self.f1,text="Appuyer sur démarer pour lancer le processus").pack(side="top",pady=(25,25))
-        self.but=customtkinter.CTkButton(self.f1,text="Démarrer",width=150,height=40,command=lambda :self.configure()).pack()
-        self.lab2=customtkinter.CTkLabel(self.f1,text_color="red",text="").pack(side="bottom")
+        customtkinter.CTkLabel(self,text="Appuyer sur démarer pour lancer le processus").pack(side="top",pady=(25,25))
+        customtkinter.CTkButton(self,text="Démarrer",width=150,height=40,command=lambda :self.configure()).pack()
+        customtkinter.CTkLabel(self,text_color="red",text="").pack(side="bottom")
         if self.master.type =='FOURNISSEUR':
-            self.td=customtkinter.CTkComboBox(self.f1, values=["Ferme", "Fictive","Tarif"]).pack(pady=(20,20))
-        self.f1.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
+            customtkinter.CTkComboBox(self, values=["Ferme", "Fictive","Tarif"]).pack(pady=(20,20))
+        else:
+            customtkinter.CTkComboBox(self, values=["Magasin", "Facturation"]).pack(pady=(20,20))
+        self.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
 
 
     def configure(self):
@@ -143,20 +116,24 @@ class MainFrame(customtkinter.CTkFrame):
         for e in entrepot:
             self.excel_list.append((self.master.excel[self.master.excel['ENTREPOT']==e],e))  
         
-        if self.master.type=='FOURNISSEUR':commande_type = self.f1.winfo_children()[-1].get()
+        commande_type = self.winfo_children()[-1].get()
         
         
         for e in self.excel_list:
             if self.master.type=='FOURNISSEUR':
-                if commande_type == "Tarif":self.p.append(Tarif(self.master.excel,e[1], self.master.credentials))
+                if commande_type == "Tarif":self.p.append(Tarif(self.master.excel,e[1]))
                 else:
-                    self.p.append(Fournisseur(self.master.excel,e[1], self.master.credentials, self.master.geo))
+                    self.p.append(Fournisseur(self.master.excel,e[1], self.master.geo))
                     self.p[-1].ffi = commande_type
-            if self.master.type=='MAGASIN':self.p.append(Magasin(self.master.excel,e[1],self.master.credentials))
+            if self.master.type=='MAGASIN':
+                if commande_type == "Magasin":
+                    self.p.append(Magasin(self.master.excel,e[1]))
+                else:
+                    self.p.append(Facturation(self.master.excel, e[1], self.master.geo))
         self.switch()
         
     def switch(self):
-        self.f1.destroy()
+        self.destroy()
 
         self.f2 = customtkinter.CTkFrame(self.master)
         entrepot_str="/".join([pro.entrepot for pro in self.p])
@@ -181,12 +158,14 @@ class MainFrame(customtkinter.CTkFrame):
         self.pb.place(relx=0.5,rely=0.8,anchor=tkinter.CENTER)
 
     def get_start(self):
-        if self.started:
+        if not self.p[0].stopped:
             self.but.configure(text="Démarrer")
-            self.started=False
         else:
             self.but.configure(text="Arreter")
-            #Appel fonction demmarage
+        for process in self.p:
+            process.stopped = not process.stopped
+
+        if not self.started:
             self.started=True
             for process in self.p:
                 self.th = threading.Thread(target=process.setup)
@@ -194,18 +173,15 @@ class MainFrame(customtkinter.CTkFrame):
                 self.th.start()
             self.update_pb()
             
-            #t = threading.Thread(target=self.writting_rapport)
-            #t.start()
             
     
     def update_pb(self):
-        
         ps=sum([int(pro.ps) for pro in self.p])
         self.pb.set(ps/self.pas)
         self.f3.winfo_children()[-1].configure(text=f"Produit saisie: {ps}")
         self.after(2000,self.update_pb)
                                                
-        
+
 #Main Windows
 class MainWindow(customtkinter.CTk):
     def __init__(self):
@@ -219,9 +195,9 @@ class MainWindow(customtkinter.CTk):
         self.type=''
         self.credentials = Credentials() 
         self.launch_stated=False
-        self.my_frame = VerifFrame(self)
+        self.my_frame = CredentialsFrame(self)
         
-        self.my_frame.start_process()
+        self.my_frame.process()
     
     def verify_ok(self):
         self.my_frame = CredentialsFrame(self)
@@ -234,7 +210,7 @@ class MainWindow(customtkinter.CTk):
     def loadExcel(self):
         try:self.file=tkinter.filedialog.askopenfile(title="Select excel file",initialdir='./',filetypes=(("Excel files", ".xlsx .xls"),))
         except: return
-        try:self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
+        try:self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':int,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
         except: return
         self.excel['Status']=''
         try:
@@ -256,6 +232,8 @@ class MainWindow(customtkinter.CTk):
             self.geo = self.my_frame.winfo_children()[1].get()
             self.my_frame.destroy()
             self.my_frame=MainFrame(self)
+            return
+        if type(self.my_frame) != LaunchFrame:
             return
         self.my_frame.invert_excel_text()
         self.after(1000,self.verify)

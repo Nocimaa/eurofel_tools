@@ -8,15 +8,16 @@ if os.name == 'nt': from subprocess import CREATE_NO_WINDOW
 from selenium import webdriver
 from pandas import read_excel
 from selenium.webdriver.chrome.options import Options
+import abstract
 #%%
 
 #excel=read_excel('carrefour.magasin test.xlsx', sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
 
 #%%
-class Magasin():
-    def __init__(self,main_excel,entrepot,credentials):
+class Magasin(abstract.Abstract):
+    def __init__(self,main_excel,entrepot):
         
-        
+        super().__init__()
         self.service=ChromeService()
         if os.name == 'nt':self.service.creation_flags= CREATE_NO_WINDOW
         options = Options()
@@ -30,7 +31,6 @@ class Magasin():
         self.excel = main_excel[main_excel['ENTREPOT']==entrepot]
         self.excel = self.excel.sort_values(by=['MAGASIN','IFLS'])
         self.action=ActionChains(self.browser)
-        self.credentials= credentials
 
         self.start=False
         self.state=False
@@ -46,55 +46,7 @@ class Magasin():
 
         self.etb={"175":"901","729":"961","774":"961"}
 
-
-    #Process
-    def enter(self):
-        self.action.send_keys(Keys.ENTER)
-        self.action.perform()
-    def tab(self,i):
-        for _ in range(i):self.action.send_keys(Keys.TAB)
-        self.action.perform()
-    def suppr(self,i):
-        for _ in range(i):self.action.send_keys(Keys.DELETE)
-        self.action.perform()
-    def write(self,text):
-        self.action.send_keys(text)
-        self.action.perform()
-    def get_first_imported(self):
-        self.waiting_system()
-        try:
-            h = self.browser.execute_script("return document.getElementsByClassName('NGREEN');")[24]
-            if h.text.isalpha():return h.text
-            int(h.text)
-            if len(h.text)!=6:raise ValueError
-            return h.text
-        except:
-            pass
-        try:
-            h = self.browser.execute_script("return document.getElementsByClassName('NPINK');")[1]
-            if h.text.isalpha():return h.text
-            int(h.text)
-            if len(h.text)!=6:raise ValueError
-            return h.text
-        except:
-            pass
-        print('Cannot be imported')
         
-        return None
-    def waiting_system(self):
-        time.sleep(0.1)
-        while True:
-            time.sleep(0.1)
-            try:
-                h = self.browser.execute_script("return document.getElementById('sb_status');")
-                if not "X SYSTEM" in h.text:
-                    time.sleep(0.1)
-                    break
-            except:
-                time.sleep(0.25)
-        if self.browser.execute_script("return document.getElementsByClassName('NWHITE');")[0].text.strip()=="Messages":
-            self.enter()
-            self.waiting_system()
     def setup(self):
         self.full_process(self.entrepot)
         self.waiting_system()
@@ -148,7 +100,8 @@ class Magasin():
             self.write(Keys.F3)
             self.waiting_system()
             return False
-        return True    
+        return True
+        
     def input_market(self,exc):
         t=dict(zip(exc['MAGASIN'],exc['QUANTITE']))
         ifls = exc.iloc[0]['IFLS']
@@ -186,6 +139,7 @@ class Magasin():
         self.write(Keys.F3)
         self.waiting_system()
         #self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ok'
+
     def full_process(self,entrepot):
         self.loggin()
         self.choose_bassin(self.etb[entrepot])
@@ -196,41 +150,5 @@ class Magasin():
         self.action.send_keys("04")
         self.action.perform()
         self.waiting_system()       
-    def loggin(self):
-        self.write(self.credentials.username)
-        self.tab(1)
-        self.write(self.credentials.passwd)
-        self.enter()
-        self.waiting_system()
-        time.sleep(5)
-        while self.verif()==0:
-            self.enter()
-            self.waiting_system()
-        self.write(self.credentials.secndpasswd)
-        self.enter()
-        self.waiting_system()
-    def choose_bassin(self,bassin):
-        if bassin=="901":
-            self.tab(1)
-        if bassin=="961":
-            self.tab(2)
-        self.write("1")
-        self.enter()
-        self.waiting_system()
-        while self.verif()==0:
-            self.enter()
-            self.waiting_system()
-    def choose_entrepot(self,entrepot):
-        self.write("07")
-        self.write(entrepot)
-        self.write(self.etb[entrepot])
-        self.enter()
-        self.waiting_system()
-        self.tab(4)
-        self.write("1")
-        self.enter()
-        self.waiting_system()   
-    def verif(self):
-        h = self.browser.execute_script("return document.getElementsByClassName('RGREEN');")
-        return len(h)
+  
 # %%

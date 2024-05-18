@@ -5,6 +5,9 @@ class Credentials:
         self.username = ""
         self.passwd = ""
         self.secndpasswd = ""
+        self.facturationpass = ""
+        if self.fileExist():
+            self.getCred()
     def fileExist(self):
         return os.path.exists("credentials.erfl")
     def getCred(self):
@@ -12,10 +15,11 @@ class Credentials:
         self.username = file.readline()
         self.passwd = file.readline()
         self.secndpasswd = file.readline()
+        self.facturationpass = file.readline()
         file.close()
-    def setCred(self, username, passwd, secndpasswd):
+    def setCred(self, username, passwd, secndpasswd,factpass):
         file = open("credentials.erfl", "w")
-        file.write(username+'\n'+ passwd+'\n'+secndpasswd+'\n')
+        file.write(username+'\n'+ passwd+'\n'+secndpasswd+'\n'+factpass+'\n')
         file.close()
     def deleteCred(self):
         if self.fileExist():

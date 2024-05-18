@@ -9,13 +9,13 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 import datetime
-
+import abstract
 #excel=read_excel('carrefour.magasin test.xlsx', sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
 #%%
-class Tarif():
-    def __init__(self,excel,entrepot, credentials):
+class Tarif(abstract.Abstract):
+    def __init__(self,excel,entrepot):
         
-        
+        super().__init__()  
         self.service=ChromeService()
         self.service.creation_flags= CREATE_NO_WINDOW
         options = Options()
@@ -27,7 +27,6 @@ class Tarif():
         self.excel = self.main_excel[self.main_excel['ENTREPOT']==entrepot]
         self.excel = self.excel.sort_values(by=['IFLS'])
         self.action=ActionChains(self.browser)
-        self.credentials= credentials
 
         self.start=False
         self.state=False
@@ -48,20 +47,8 @@ class Tarif():
                 date = date+datetime.timedelta(1)
             print(date)
             self.date=date.strftime('%d%m%y')
-    #Process
-    def enter(self):
-        self.action.send_keys(Keys.ENTER)
-        self.action.perform()
-    def tab(self,i):
-        for _ in range(i):self.action.send_keys(Keys.TAB)
-        self.action.perform()
-    def suppr(self,i):
-        for _ in range(i):self.action.send_keys(Keys.DELETE)
-        self.action.perform()
-    def write(self,text):
-        self.action.send_keys(text)
-        self.action.perform()
 
+    
     def get_first_imported(self):
         self.waiting_system()
         try:
@@ -84,20 +71,6 @@ class Tarif():
         
         return None
 
-    def waiting_system(self):
-        time.sleep(0.1)
-        while True:
-            time.sleep(0.1)
-            try:
-                h = self.browser.execute_script("return document.getElementById('sb_status');")
-                if not "X SYSTEM" in h.text:
-                    time.sleep(0.1)
-                    break
-            except:
-                time.sleep(0.25)
-        if  self.browser.execute_script("return document.getElementsByClassName('NWHITE');")[0].text.strip()=="Messages":
-            self.enter()
-            self.waiting_system()
     def verif_tarif(self):
         while True:
             try:
@@ -174,45 +147,4 @@ class Tarif():
         self.action.perform()
         self.waiting_system()
         
-        
-    def loggin(self):
-        self.write(self.credentials.username)
-        self.tab(1)
-        self.write(self.credentials.passwd)
-        self.enter()
-        self.waiting_system()
-        time.sleep(5)
-        while self.verif()==0:
-            self.enter()
-            self.waiting_system()
-        self.write(self.credentials.secndpasswd)
-        self.enter()
-        self.waiting_system()
-
-    def choose_bassin(self,bassin):
-        if bassin=="901":
-            self.tab(1)
-        if bassin=="961":
-            self.tab(2)
-        self.write("1")
-        self.enter()
-        self.waiting_system()
-        while self.verif()==0:
-            self.enter()
-            self.waiting_system()
-
-    def choose_entrepot(self,entrepot):
-        self.write("07")
-        self.write(entrepot)
-        self.write(self.etb[entrepot])
-        self.enter()
-        self.waiting_system()
-        self.tab(4)
-        self.write("1")
-        self.enter()
-        self.waiting_system()
-    
-    def verif(self):
-        h = self.browser.execute_script("return document.getElementsByClassName('RGREEN');")
-        return len(h)
 # %%
