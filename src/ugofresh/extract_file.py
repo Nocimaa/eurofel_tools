@@ -1,3 +1,4 @@
+#%%
 import tkinter
 from tkinter import filedialog
 import customtkinter
@@ -90,3 +91,4 @@ class Window(customtkinter.CTk):
         self.loc = filedialog.askdirectory(initialdir="./")+"/"
 App = Window()
 App.mainloop()
+# %%

@@ -17,7 +17,7 @@ class Magasin():
     def __init__(self,main_excel,entrepot,credentials):
         
         
-        self.service=ChromeService('chromedriver.exe')
+        self.service=ChromeService()
         if os.name == 'nt':self.service.creation_flags= CREATE_NO_WINDOW
         options = Options()
         #options.add_argument('--headless=new')
@@ -165,18 +165,27 @@ class Magasin():
                 try:
                     if h[23+7*i].text.strip() in t.keys():
                         self.write(t[h[23+7*i].text.strip()])
+                        self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls)&(self.main_excel['MAGASIN'] == t[h[23 + 7 * i].text.strip()]),'Status']='Ok'
                         t.pop(h[23+7*i].text.strip())
                         self.ps+=1
+                    
                 except: pass
                 if len(t.keys())==0:break
                 self.tab(1)
+            try:    
+                code=h[23+7*11].text.strip()
+                dic={el for el in t.keys() if int(el) < int(code)}
+                for el in dic:
+                    self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls)&(self.main_excel['MAGASIN'] == el),'Status']='Magasin introuvable'
+                    t.pop(el)
+            except: pass
             self.write(Keys.PAGE_DOWN)
             self.waiting_system()
         self.enter()
         self.waiting_system()
         self.write(Keys.F3)
         self.waiting_system()
-        self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ok'
+        #self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ok'
     def full_process(self,entrepot):
         self.loggin()
         self.choose_bassin(self.etb[entrepot])

@@ -16,7 +16,7 @@ class Tarif():
     def __init__(self,excel,entrepot, credentials):
         
         
-        self.service=ChromeService('chromedriver.exe')
+        self.service=ChromeService()
         self.service.creation_flags= CREATE_NO_WINDOW
         options = Options()
         options.add_argument('--ignore-ssl-errors=yes')
@@ -111,7 +111,12 @@ class Tarif():
                     return False
             except:pass
     def tarif(self,ifls):
-        if int(self.excel[self.excel['IFLS']==ifls]['QUANTITE'])==0:
+
+        #if multiple times this line in the file avoid crash
+        quantity = list(self.excel[self.excel['IFLS']==ifls]['QUANTITE'])[0]
+
+
+        if quantity==0:
             print('Cannot create tarif')
             self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ko: Quantity Zero'
             return
@@ -148,7 +153,9 @@ class Tarif():
     
     def setup(self):
         self.full_process(self.entrepot)
-        for ifls in set(self.excel['IFLS']):
+        ite = sorted(list(set(self.excel['IFLS'])))
+        for ifls in ite:
+            print(ifls)
             self.tarif(ifls)
         self.browser.close()
         self.main_excel.to_excel('Rapport Tarif.xlsx')

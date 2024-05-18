@@ -9,15 +9,16 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 class Fournisseur():
-    def __init__(self,excel,entrepot,credentials):
+    def __init__(self,excel,entrepot,credentials, zonegeo):
         
         self.main_excel=excel
-        self.service=ChromeService('chromedriver.exe')
+        self.service=ChromeService()
         if os.name == 'nt':self.service.creation_flags= CREATE_NO_WINDOW
         options = Options()
         #options.add_argument('--headless=new')
         options.add_argument('--ignore-ssl-errors=yes')
         options.add_argument('--ignore-certificate-errors')
+        self.geo = zonegeo
         self.browser= webdriver.Chrome(service=self.service,options=options)  
         self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
         self.excel = self.main_excel[self.main_excel['ENTREPOT']==entrepot]
@@ -60,6 +61,8 @@ class Fournisseur():
                 for i in range(4):
                     try:
                         h = self.browser.execute_script("return document.getElementsByClassName('NGREEN');")[25+i]
+                        if h.text == "MAJSER":
+                            return h.text 
                         int(h.text)
                         return h.text
                     except:
@@ -211,6 +214,12 @@ class Fournisseur():
         self.write(self.date.replace("/",""))
         self.tab(2)
         self.write(self.secteur)
+        #Zone Geo
+        self.tab(3)
+        print(self.geo)
+        if (self.geo != 'Rungis'):
+            self.write(str.upper(self.geo))
+        #Fin Zone Geo
         self.enter()
         self.waiting_system()
         self.enter()
@@ -221,9 +230,7 @@ class Fournisseur():
         return True
 
     def setup(self):
-        print("setup")
         self.full_process(self.entrepot)
-        print(self.fournisseurs_set)
         for f in self.fournisseurs_set:
             curr = self.excel[self.excel['FOURNISSEUR']==f]
             time.sleep(1)

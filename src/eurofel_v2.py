@@ -88,23 +88,27 @@ class LaunchFrame(customtkinter.CTkFrame):
         
         
         #Excel Image
-        self.ce = customtkinter.CTkImage(self.img[0],size=(50,50))
-        self.cle=customtkinter.CTkLabel(self,image=self.ce,text="").pack(pady=(0,25))
+        image = customtkinter.CTkImage(self.img[0],size=(50,50))
+        customtkinter.CTkLabel(self,image=image,text="").pack(pady=(0,25), expand=True)
         #Excel Button
-        self.eb=customtkinter.CTkButton(self,text="Load Excel",command=lambda :self.master.loadExcel()).pack(side="bottom",pady=(25,25))
+        customtkinter.CTkComboBox(self, values=["Rungis", "Marseille"]).pack(side='bottom')
+        customtkinter.CTkButton(self,text="Load Excel",command=lambda :self.master.loadExcel()).pack(side="bottom",pady=(25,25))
         #Excel Text
-        self.et = customtkinter.CTkLabel(self,text="Not Loaded",text_color="red").pack(side="bottom")
+        customtkinter.CTkLabel(self,text="Not Loaded",text_color="red").pack(side="top")
         
+
+
+
         self.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
     
 
     def start_verify(self):self.master.verify()
     def invert_excel_text(self):
         if self.master.file!=None:
-            self.winfo_children()[-1].configure(text="Loaded",text_color="green")
+            self.winfo_children()[3].configure(text="Loaded",text_color="green")
             self.master.launch_stated = True
         else:
-            self.winfo_children()[-1].configure(text_color="red",text="Not Loaded")
+            self.winfo_children()[3].configure(text_color="red",text="Not Loaded")
             #self.after(2000,self.invert_excel_text)
 
 
@@ -146,7 +150,7 @@ class MainFrame(customtkinter.CTkFrame):
             if self.master.type=='FOURNISSEUR':
                 if commande_type == "Tarif":self.p.append(Tarif(self.master.excel,e[1], self.master.credentials))
                 else:
-                    self.p.append(Fournisseur(self.master.excel,e[1], self.master.credentials))
+                    self.p.append(Fournisseur(self.master.excel,e[1], self.master.credentials, self.master.geo))
                     self.p[-1].ffi = commande_type
             if self.master.type=='MAGASIN':self.p.append(Magasin(self.master.excel,e[1],self.master.credentials))
         self.switch()
@@ -156,13 +160,13 @@ class MainFrame(customtkinter.CTkFrame):
 
         self.f2 = customtkinter.CTkFrame(self.master)
         entrepot_str="/".join([pro.entrepot for pro in self.p])
-        self.el=customtkinter.CTkLabel(self.f2,text=f"Entrepot: {entrepot_str}").pack(side="left",padx=(75,75))
-        self.sl=customtkinter.CTkLabel(self.f2,text=f"Secteur: {self.p[0].secteur}").pack(side="right",padx=(75,75))
-        self.sl=customtkinter.CTkLabel(self.f2,text=f"Date: {self.p[0].date}").pack(padx=(75,75))
+        self.el = customtkinter.CTkLabel(self.f2,text=f"Entrepot: {entrepot_str}").pack(side="left",padx=(75,75))
+        self.sl = customtkinter.CTkLabel(self.f2,text=f"Secteur: {self.p[0].secteur}").pack(side="right",padx=(75,75))
+        self.sl = customtkinter.CTkLabel(self.f2,text=f"Date: {self.p[0].date}").pack(padx=(75,75))
         self.f2.pack(pady=(25,25))
 
         
-        self.f3= customtkinter.CTkFrame(self.master)
+        self.f3 = customtkinter.CTkFrame(self.master)
         
         self.pas=sum([int(pro.pas) for pro in self.p])
         self.el=customtkinter.CTkLabel(self.f3,text=f"Produit à saisir: {self.pas}").pack(side="left",padx=(75,75))
@@ -224,14 +228,14 @@ class MainWindow(customtkinter.CTk):
         self.my_frame.process()
     def cred_ok(self):
         #destroy verify frame here
-        self.my_frame = LaunchFrame(self)
+        self.my_frame = LaunchFrame(self, width=500)
         self.my_frame.start_verify()
         
     def loadExcel(self):
         try:self.file=tkinter.filedialog.askopenfile(title="Select excel file",initialdir='./',filetypes=(("Excel files", ".xlsx .xls"),))
-        except: pass
+        except: return
         try:self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
-        except: pass
+        except: return
         self.excel['Status']=''
         try:
             self.excel['DATE']
@@ -249,6 +253,7 @@ class MainWindow(customtkinter.CTk):
         self.file=None
     def verify(self):
         if self.launch_stated:
+            self.geo = self.my_frame.winfo_children()[1].get()
             self.my_frame.destroy()
             self.my_frame=MainFrame(self)
             return

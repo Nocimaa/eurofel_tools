@@ -14,7 +14,7 @@ os.environ['TK_LIBRARY'] = os.path.join(python_install, 'tcl', 'tk8.6')
 
 
 
-files = [relative_path+"excel.ico",relative_path+"settings.erfl",relative_path+"chromedriver.exe",
+files = [relative_path+"excel.ico",relative_path+"settings.erfl",
          (os.path.join(python_install, 'DLLs', 'tk86t.dll'), os.path.join('lib', 'tk86t.dll')),
          (os.path.join(python_install, 'DLLs', 'tcl86t.dll'), os.path.join('lib', 'tcl86t.dll'))]
 
