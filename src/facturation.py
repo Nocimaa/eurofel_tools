@@ -8,7 +8,7 @@ if os.name == 'nt': from subprocess import CREATE_NO_WINDOW
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import abstract
-
+import re
 
 
 class Facturation(abstract.Abstract):
@@ -28,11 +28,11 @@ class Facturation(abstract.Abstract):
         self.action=ActionChains(self.browser)
 
         self.entrepot=entrepot
-        self.secteur="12" if entrepot == "175" else "2"
+        self.secteur="12" if entrepot == "175" else "02"
         self.date=self.excel.iloc[0]['JOUR']
         self.canal=self.excel.iloc[0]['CANAL']
 
-        self.pas=excel['QUANTITE'].sum()
+        self.pas=self.excel['QUANTITE'].sum()
         self.ps=0
 
         self.etb={"175":"901","729":"961","774":"961"}
@@ -44,21 +44,34 @@ class Facturation(abstract.Abstract):
         check = self.quantity_check()
         if not check:
             self.stopped = True
+        
+        time.sleep(4)
+
         if self.entrepot == '175':
-            #self.generate_tarif()
+            self.generate_tarif()
             if self.canal == "R":
                 self.generate_majser()
-            #self.generate_tax()
+            self.generate_tax()
             self.write(Keys.F3)
             self.waiting_system()
             self.write(Keys.F3)
             self.waiting_system()
         
         self.send_quantity()
-        self.write(Keys.F3)
-        self.waiting_system()
-        self.write(Keys.F3)
-        self.waiting_system()
+
+        self.ordonnancement()
+        if self.entrepot == "175":
+            self.switch_factaccount()
+            self.facturation()
+
+        self.browser.close()
+    #Finalisation de l'ordonnancement
+    def switch_factaccount(self):
+        liste = self.browser.execute_script("return document.getElementsByClassName('RRED');")
+        while len(liste) != 0 and liste[0].text.strip() != '01      M E N U   G E N E R A L':
+            self.write(Keys.F3)
+            self.waiting_system()
+            liste = self.browser.execute_script("return document.getElementsByClassName('RRED');")
 
         self.action.key_down(Keys.SHIFT).send_keys(Keys.F12).key_up(Keys.SHIFT).perform()
         self.waiting_system()
@@ -66,29 +79,60 @@ class Facturation(abstract.Abstract):
         self.waiting_system()
         self.action.key_down(Keys.SHIFT).send_keys(Keys.F12).key_up(Keys.SHIFT).perform()
         self.waiting_system()
-        self.write(Keys.F3)
+        
+        liste = self.browser.execute_script("return document.getElementsByClassName('NGREEN');")
+        while len(liste) != 50 and liste[30].text != 'Votre profil  . . . . .':
+            self.write(Keys.F3)
+            self.waiting_system()
+            liste = self.browser.execute_script("return document.getElementsByClassName('NGREEN');")
+
+    
+    def ordonnancement(self):
+        self.write("04")
         self.waiting_system()
-        self.write(Keys.F3)
+        self.write("04")
         self.waiting_system()
 
+        self.tab(1)
+        self.write(self.secteur)
+        self.tab(1)
+        self.write("4")
 
-        self.facturation()
+        self.enter()
 
+        self.write("T")
 
+        self.enter()
+        self.waiting_system()
+
+        time.sleep(5)
+        for i in range(5):
+            self.enter()
+
+        for i in range(4):
+            self.write(Keys.F3)
+            self.waiting_system()
 
     def facturation(self):
+
         self.write(self.credentials.facturationpass)
         self.enter()
-        time.sleep(3)
+        time.sleep(5)
+        print(self.geo == "Rungis")
         if self.geo == "Rungis":
-            self.tab(2)
-        else:
             self.tab(1)
+        else:
+            self.tab(0)
         self.write("1")
         self.enter()
         time.sleep(3)
         self.enter()
 
+        self.menu_11() 
+
+        self.menu_22()  
+
+    def menu_11(self):
         self.write("11")
         self.waiting_system()
         
@@ -96,8 +140,37 @@ class Facturation(abstract.Abstract):
         self.tab(4)
         i = 0
         while liste[20 + i * 11].text.strip().isdigit():
-            print(liste[20 + i * 11].text.strip().isdigit())
+            self.write("G")
             i += 1
+        self.enter()
+        self.waiting_system()
+
+        liste = self.browser.execute_script("return document.getElementsByClassName('NWHITE');")
+        while liste[2].text == "Saisie du N° BL fournisseur":
+            self.write(liste[6].text.strip())
+            print(liste[6].text.strip())
+            self.enter()
+            liste = self.browser.execute_script("return document.getElementsByClassName('NWHITE');")
+
+        self.write(Keys.F3)
+
+    def menu_22(self):
+        self.write("22")
+        self.waiting_system()
+
+        for client in set(self.excel['MAGASIN']):
+            print(client)
+            self.write(Keys.F1)
+            self.tab(1)
+            self.write(client)
+            self.enter()
+            self.tab(8)
+            time.sleep(3)
+            self.write("1")
+            self.enter()
+            self.action.key_down(Keys.SHIFT).send_keys(Keys.F12).key_up(Keys.SHIFT).perform()
+            time.sleep(3)
+        self.write(Keys.F3)
 
     def full_process(self,entrepot):
         self.loggin()
@@ -158,7 +231,7 @@ class Facturation(abstract.Abstract):
                 self.enter()
                 liste = self.browser.execute_script("return document.getElementsByClassName('NWHITE');")
                 while liste[2].text == 'Saisie des commandes client':
-                    self.write(Keys.F3)
+                    self.write(Keys.F9)
                     self.waiting_system()
                     liste = self.browser.execute_script("return document.getElementsByClassName('NWHITE');")
                 self.write(Keys.F3)
@@ -167,6 +240,11 @@ class Facturation(abstract.Abstract):
             else:    
                 self.write(Keys.PAGE_DOWN)
                 self.waiting_system()
+        self.write(Keys.F3)
+        self.waiting_system()
+        self.write(Keys.F3)
+        self.waiting_system()
+        
     def generate_majser(self):
         self.write("09")
         self.waiting_system()
@@ -243,6 +321,6 @@ class Facturation(abstract.Abstract):
         self.waiting_system()
         self.write(Keys.F3)
         self.waiting_system()
-        return self.pas <= self.ps
+        return self.pas == self.ps
             
 # %%

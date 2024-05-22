@@ -97,14 +97,15 @@ class MainFrame(customtkinter.CTkFrame):
         self.p = []
         self.t = []
         self.started=False
-     
+        self.allprocess = True
+
         customtkinter.CTkLabel(self,text="Appuyer sur démarer pour lancer le processus").pack(side="top",pady=(25,25))
         customtkinter.CTkButton(self,text="Démarrer",width=150,height=40,command=lambda :self.configure()).pack()
         customtkinter.CTkLabel(self,text_color="red",text="").pack(side="bottom")
         if self.master.type =='FOURNISSEUR':
             customtkinter.CTkComboBox(self, values=["Ferme", "Fictive","Tarif"]).pack(pady=(20,20))
         else:
-            customtkinter.CTkComboBox(self, values=["Magasin", "Facturation"]).pack(pady=(20,20))
+            customtkinter.CTkComboBox(self, values=["Magasin", "Facturation (Still in Beta may crash)"]).pack(pady=(20,20))
         self.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
 
 
@@ -157,7 +158,21 @@ class MainFrame(customtkinter.CTkFrame):
         self.pb.set(0)
         self.pb.place(relx=0.5,rely=0.8,anchor=tkinter.CENTER)
 
+        self.refresh_status()
+
+    def refresh_status(self):
+        for el in self.p:
+            if el.stopped != self.allprocess:
+                if not self.allprocess:
+                    self.but.configure(text="Démarrer")
+                else:
+                    self.but.configure(text="Arreter")
+                break
+
+        self.after(500, self.refresh_status)
+
     def get_start(self):
+        self.allprocess = not self.allprocess
         if not self.p[0].stopped:
             self.but.configure(text="Démarrer")
         else:

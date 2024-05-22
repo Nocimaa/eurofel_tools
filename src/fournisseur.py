@@ -8,6 +8,10 @@ if os.name == 'nt': from subprocess import CREATE_NO_WINDOW
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import abstract
+import re
+
+regex = r" Vrac (.*) pcs - \d+,?\d* kg | Barquettes (\d+)x\d* g | Vrac (\d*,?\d*) kg | - (\d*) pcs - \d*,?\d* kg | Plateau (\d+,?\d*) kg | Plateau (\d+) pcs - (\d+,?,\d*) kg | Bottes (\d*)x\d* g | 1 rang (\d+,?\d*) kg "
+
 
 class Fournisseur(abstract.Abstract):
     def __init__(self,excel,entrepot, zonegeo):
@@ -34,6 +38,7 @@ class Fournisseur(abstract.Abstract):
 
         self.entrepot=entrepot
         self.secteur="12" if entrepot == "175" else "2"
+        print(self.excel)
         self.date=self.excel.iloc[0]['DATE']
         self.fournisseurs_set=set(self.excel['FOURNISSEUR'])
 
@@ -145,9 +150,24 @@ class Fournisseur(abstract.Abstract):
                     i+= 1
                     continue
             self.qp_input(str(cur['QUANTITE']),str(cur['PRIX']))
+
+
+
             i+=1
             self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ok'
             self.ps+=1
+    def get_match(self, line, poids):
+            liste = line['PRODUIT'].split('/')
+            match = re.compile(regex)
+            for el in liste[1:]:
+                if re.fullmatch(regex, el):
+                    allgroup = match.match(el).groups()
+                    value = [float(val.replace(",",".")) for val in allgroup if val != None][0]
+                    print(value)
+                    break
+            else:
+                print("Not Matched")
+
     def init(self,code):
         #f1_system()
         self.action.send_keys(Keys.F6)
