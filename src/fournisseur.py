@@ -10,7 +10,14 @@ from selenium.webdriver.chrome.options import Options
 import abstract
 import re
 
-regex = r" Vrac (.*) pcs - \d+,?\d* kg | Barquettes (\d+)x\d* g | Vrac (\d*,?\d*) kg | - (\d*) pcs - \d*,?\d* kg | Plateau (\d+,?\d*) kg | Plateau (\d+) pcs - (\d+,?,\d*) kg | Bottes (\d*)x\d* g | 1 rang (\d+,?\d*) kg "
+import json
+with open("country.json", "r") as file:
+    dic = json.loads(file.read())
+import re
+re_vrac = r" Vrac (\d*,?\d*) k?g | Plateau (\d+,?\d*) k?g | \d+ rang (\d+,?\d*) k?g | Palox (\d+,?\d*) k?g | Mini colis (\d+,?\d*) k?g | Sac (\d+,?\d*) k?g | Mini colis plateau - (\d+,?\d*) k?g "
+match_vrac = re.compile(re_vrac)
+re_pcb = r" Barquettes (\d+)x\d* k?g | Vrac (\d+,?\d*) pcs - \d+,?\d* k?g | - (\d*,?\d*) pcs - \d*,?\d* k?g | Plateau (\d+) pcs - (\d+,?,\d*) k?g | Bottes (\d*)x\d* g | Filets (\d+,?\d*)x\d+,?\d* k?g | Sachet (\d+,?\d*)x\d+,?\d* k?g | Girsac (\d+,?\d*)x\d+,?\d* k?g "
+match_pcb = re.compile(re_pcb)
 
 
 class Fournisseur(abstract.Abstract):
@@ -38,12 +45,14 @@ class Fournisseur(abstract.Abstract):
 
         self.entrepot=entrepot
         self.secteur="12" if entrepot == "175" else "2"
-        print(self.excel)
-        self.date=self.excel.iloc[0]['DATE']
-        self.fournisseurs_set=set(self.excel['FOURNISSEUR'])
+        self.date = self.excel.iloc[0]['DATE']
+        self.fournisseurs_set = set(self.excel['FOURNISSEUR'])
 
-        self.pas=len(self.excel)
-        self.ps=0
+        self.pas = len(self.excel)
+        self.ps = 0
+        self.sw = 0
+        self.hw = 0
+
 
         self.etb={"175":"901","729":"961","774":"961"}
 
@@ -149,21 +158,27 @@ class Fournisseur(abstract.Abstract):
                     self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ko: Cannot Be imported'
                     i+= 1
                     continue
+
+            self.check_warning(cur)
+
             self.qp_input(str(cur['QUANTITE']),str(cur['PRIX']))
-
-
-
             i+=1
             self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ok'
             self.ps+=1
-    def get_match(self, line, poids):
-            liste = line['PRODUIT'].split('/')
-            match = re.compile(regex)
-            for el in liste[1:]:
-                if re.fullmatch(regex, el):
-                    allgroup = match.match(el).groups()
-                    value = [float(val.replace(",",".")) for val in allgroup if val != None][0]
-                    print(value)
+    def check_warning(self, df):
+            if df['PRODUIT'] == "FRAIS LOGISTIQUE":
+                return
+
+            liste = df['PRODUIT'].split('/')
+            origine = liste[-1].strip()
+            for el in liste[1:-1]:
+                matched = match_vrac.match(el)
+                if matched != None:
+                    print(matched.groups())
+                    break
+                matched = match_pcb.match(el)
+                if matched != None:
+                    print(matched.groups())
                     break
             else:
                 print("Not Matched")

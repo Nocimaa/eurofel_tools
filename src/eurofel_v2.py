@@ -117,17 +117,18 @@ class MainFrame(customtkinter.CTkFrame):
         for e in entrepot:
             self.excel_list.append((self.master.excel[self.master.excel['ENTREPOT']==e],e))  
         
-        commande_type = self.winfo_children()[-1].get()
+        self.commande_type = self.winfo_children()[-1].get()
         
         
         for e in self.excel_list:
             if self.master.type=='FOURNISSEUR':
-                if commande_type == "Tarif":self.p.append(Tarif(self.master.excel,e[1]))
+                if self.commande_type == "Tarif":
+                    self.p.append(Tarif(self.master.excel,e[1]))
                 else:
                     self.p.append(Fournisseur(self.master.excel,e[1], self.master.geo))
-                    self.p[-1].ffi = commande_type
+                    self.p[-1].ffi = self.commande_type
             if self.master.type=='MAGASIN':
-                if commande_type == "Magasin":
+                if self.commande_type == "Magasin":
                     self.p.append(Magasin(self.master.excel,e[1]))
                 else:
                     self.p.append(Facturation(self.master.excel, e[1], self.master.geo))
@@ -154,10 +155,14 @@ class MainFrame(customtkinter.CTkFrame):
         self.but = customtkinter.CTkButton(self.master,text="Démarrer",command=lambda :self.get_start())
         self.but.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
 
+
         self.pb=customtkinter.CTkProgressBar(self.master,width=600,height=25)
         self.pb.set(0)
         self.pb.place(relx=0.5,rely=0.8,anchor=tkinter.CENTER)
 
+        if self.commande_type == "Ferme" or self.commande_type == "Fictive":
+            customtkinter.CTkLabel(self, text="Soft Warning: 0")
+            customtkinter.CTkLabel(self, text="Hard Warning: 0")
         self.refresh_status()
 
     def refresh_status(self):
