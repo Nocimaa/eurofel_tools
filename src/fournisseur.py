@@ -11,12 +11,12 @@ import abstract
 import re
 
 import json
-with open("country.json", "r") as file:
+with open("country.json", "r", encoding="utf-8") as file:
     dic = json.loads(file.read())
 import re
-re_vrac = r" Vrac (\d*,?\d*) k?g | Plateau (\d+,?\d*) k?g | \d+ rang (\d+,?\d*) k?g | Palox (\d+,?\d*) k?g | Mini colis (\d+,?\d*) k?g | Sac (\d+,?\d*) k?g | Mini colis plateau - (\d+,?\d*) k?g "
+re_vrac = r" Vrac (\d+,?\d*) k?g | Plateau (\d+,?\d*) k?g | \d+ rang (\d+,?\d*) k?g | Palox (\d+,?\d*) k?g | Mini colis (\d+,?\d*) k?g | Sac (\d+,?\d*) k?g | Mini colis plateau - (\d+,?\d*) k?g "
 match_vrac = re.compile(re_vrac)
-re_pcb = r" Barquettes (\d+)x\d* k?g | Vrac (\d+,?\d*) pcs - \d+,?\d* k?g | - (\d*,?\d*) pcs - \d*,?\d* k?g | Plateau (\d+) pcs - (\d+,?,\d*) k?g | Bottes (\d*)x\d* g | Filets (\d+,?\d*)x\d+,?\d* k?g | Sachet (\d+,?\d*)x\d+,?\d* k?g | Girsac (\d+,?\d*)x\d+,?\d* k?g "
+re_pcb = r" Barquettes (\d+)x\d* k?g | Vrac (\d+,?\d*) pcs - \d+,?\d* k?g | - (\d*,?\d*) pcs - \d*,?\d* k?g | Plateau (\d+) pcs - \d+,?\d* k?g | Bottes (\d*)x\d* g | Filets (\d+,?\d*)x\d+,?\d* k?g | Sachet (\d+,?\d*)x\d+,?\d* k?g | Girsac (\d+,?\d*)x\d+,?\d* k?g | Mini colis (\d+,?\d*)x\d+,?\d* k?g "
 match_pcb = re.compile(re_pcb)
 
 
@@ -159,29 +159,57 @@ class Fournisseur(abstract.Abstract):
                     i+= 1
                     continue
 
-            self.check_warning(cur)
+            warning = self.check_warning(cur)
 
             self.qp_input(str(cur['QUANTITE']),str(cur['PRIX']))
             i+=1
             self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ok'
+            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Warning']=warning
             self.ps+=1
+    def extract_tuple(self, tuple):
+        return list(filter(lambda x : x != None, tuple))[0]
     def check_warning(self, df):
             if df['PRODUIT'] == "FRAIS LOGISTIQUE":
                 return
-
+            warning = ""
             liste = df['PRODUIT'].split('/')
-            origine = liste[-1].strip()
+            origine = str.lower(liste[-1].strip())
+
+            listeWE = self.browser.execute_script("return document.getElementsByClassName('NGREEN');")
+            i = 32 if listeWE[32].text.strip() in dic.keys() or len(listeWE[32].text.strip()) == 0 else 31
+            pcb = int(listeWE[i + 1].text.strip())
+            eurofel_origine = listeWE[i].text.strip()
+            listeWE = self.browser.execute_script("return document.getElementsByClassName('NWHITE');")
+            poids = float(listeWE[13].text.strip().replace(",", "."))
+            
+            if len(eurofel_origine) == 0:
+                warning += f"Pas d'origine: Excel {origine} "
+                self.sw += 1
+            elif origine != str.lower(dic[eurofel_origine]):
+                warning += f"Origine: Eurofel {dic[eurofel_origine]} Excel {origine} "
+                self.sw += 1
+
             for el in liste[1:-1]:
-                matched = match_vrac.match(el)
-                if matched != None:
-                    print(matched.groups())
-                    break
                 matched = match_pcb.match(el)
                 if matched != None:
-                    print(matched.groups())
+                    value = int(self.extract_tuple(matched.groups()))
+                    if value != pcb:
+                        warning += f"PCB: Eurofel {pcb} Excel {value} "
+                        self.hw += 1
                     break
+
+                matched = match_vrac.match(el)
+                if matched != None:
+                    value = float(self.extract_tuple(matched.groups()).strip().replace(",","."))
+                    if value != poids:
+                        warning += f"Poids: Eurofel {poids} Excel {value} "
+                        self.hw += 1
+                    break
+
             else:
-                print("Not Matched")
+                warning += f"Le libélé ne match contacte Antoine il comprendra, c'est pas grave verifie juste a la main et ca sera corriger plus tards tkt pas ca va bien se passer"
+                self.sw += 1
+            return warning
 
     def init(self,code):
         #f1_system()
@@ -233,7 +261,13 @@ class Fournisseur(abstract.Abstract):
             self.write(Keys.F3)
             self.waiting_system()
         self.browser.close()
-        self.main_excel.to_excel('Rapport Fournisseur.xlsx')
+        for i in range(100):
+            try:
+                self.main_excel.to_excel(f'Rapport Fournisseur_{i}.xlsx')
+                break
+            except:
+                pass
+
     def full_process(self,entrepot):
         self.loggin()
         self.choose_bassin(self.etb[entrepot])

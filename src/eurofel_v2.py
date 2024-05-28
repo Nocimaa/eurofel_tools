@@ -150,19 +150,20 @@ class MainFrame(customtkinter.CTkFrame):
         self.pas=sum([int(pro.pas) for pro in self.p])
         self.el=customtkinter.CTkLabel(self.f3,text=f"Produit à saisir: {self.pas}").pack(side="left",padx=(75,75))
         self.sl=customtkinter.CTkLabel(self.f3,text=f"Produit saisie: 0").pack(padx=(75,75))
-        self.f3.pack(pady=(25,25))
-
+        self.f3.pack(pady=(25,15))
+        if self.commande_type == "Ferme" or self.commande_type == "Fictive":
+            self.f4 = customtkinter.CTkFrame(self.master)
+            customtkinter.CTkLabel(self.f4, text="Soft Warning: 0").pack(side="left",padx=(75,75))
+            customtkinter.CTkLabel(self.f4, text="Hard Warning: 0").pack(padx=(75,75))
+            self.f4.pack(pady=(15,25))
         self.but = customtkinter.CTkButton(self.master,text="Démarrer",command=lambda :self.get_start())
-        self.but.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
+        self.but.place(relx=0.5,rely=0.6,anchor=tkinter.CENTER)
 
 
         self.pb=customtkinter.CTkProgressBar(self.master,width=600,height=25)
         self.pb.set(0)
         self.pb.place(relx=0.5,rely=0.8,anchor=tkinter.CENTER)
 
-        if self.commande_type == "Ferme" or self.commande_type == "Fictive":
-            customtkinter.CTkLabel(self, text="Soft Warning: 0")
-            customtkinter.CTkLabel(self, text="Hard Warning: 0")
         self.refresh_status()
 
     def refresh_status(self):
@@ -199,6 +200,12 @@ class MainFrame(customtkinter.CTkFrame):
         ps=sum([int(pro.ps) for pro in self.p])
         self.pb.set(ps/self.pas)
         self.f3.winfo_children()[-1].configure(text=f"Produit saisie: {ps}")
+        if self.commande_type == "Ferme" or self.commande_type == "Fictive":
+            sw=sum([int(pro.sw) for pro in self.p])
+            hw=sum([int(pro.hw) for pro in self.p])
+            self.f4.winfo_children()[0].configure(text=f"Soft Warning: {sw}")
+            self.f4.winfo_children()[1].configure(text=f"Hard Warning: {hw}")
+
         self.after(2000,self.update_pb)
                                                
 
@@ -232,17 +239,19 @@ class MainWindow(customtkinter.CTk):
         except: return
         try:self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':int,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
         except: return
-        self.excel['Status']=''
         try:
             self.excel['DATE']
             self.type='FOURNISSEUR'
             self.launch_stated=True
+            self.excel['Status']=''
+            self.excel['Warning']=''
             return
         except: pass
         try:
             self.excel['JOUR']
             self.type='MAGASIN'
             self.launch_stated=True
+            self.excel['Warning']=''
             return
         except:pass
         self.excel=None

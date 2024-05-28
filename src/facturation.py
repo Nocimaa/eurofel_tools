@@ -81,7 +81,9 @@ class Facturation(abstract.Abstract):
         self.waiting_system()
         
         liste = self.browser.execute_script("return document.getElementsByClassName('NGREEN');")
-        while len(liste) != 50 and liste[30].text != 'Votre profil  . . . . .':
+        while True:
+            if len(liste) >= 30 and liste[30].text == 'Votre profil  . . . . .':
+                break
             self.write(Keys.F3)
             self.waiting_system()
             liste = self.browser.execute_script("return document.getElementsByClassName('NGREEN');")
@@ -99,6 +101,13 @@ class Facturation(abstract.Abstract):
         self.write("4")
 
         self.enter()
+
+        liste = self.browser.execute_script("return document.getElementsByClassName('NWHITE');")
+        print(int(liste[9].text.strip()))
+        if int(liste[9].text.strip()) != self.pas:
+            self.stopped = True
+
+        time.sleep(10)
 
         self.write("T")
 
