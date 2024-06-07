@@ -63,7 +63,12 @@ class LaunchFrame(customtkinter.CTkFrame):
         #Excel Button
 
         customtkinter.CTkComboBox(self, values=["Rungis", "Marseille"]).pack(side='bottom')
-        customtkinter.CTkButton(self,text="Load Excel",command=lambda :self.master.loadExcel()).pack(side="bottom",pady=(25,25))
+
+        clickable = "normal" if self.master.validation[0] else "disabled"
+        text_click = "Charger Excel" if self.master.validation[0] else "Désactivé"
+
+
+        customtkinter.CTkButton(self,text=text_click,command=self.master.loadExcel, state=clickable).pack(side="bottom",pady=(25,25))
 
         #Excel Text
         customtkinter.CTkLabel(self,text="Not Loaded",text_color="red").pack(side="top")
@@ -103,9 +108,24 @@ class MainFrame(customtkinter.CTkFrame):
         customtkinter.CTkButton(self,text="Démarrer",width=150,height=40,command=lambda :self.configure()).pack()
         customtkinter.CTkLabel(self,text_color="red",text="").pack(side="bottom")
         if self.master.type =='FOURNISSEUR':
-            customtkinter.CTkComboBox(self, values=["Ferme", "Fictive","Tarif"]).pack(pady=(20,20))
+            liste = []
+            if self.master.validation[1]: liste.append("Ferme") ; liste.append("Fictive")
+            if self.master.validation[2]: liste.append("Tarif")
+
+            if len(liste) == 0: liste.append("Aucune module autorisé")
+
+            customtkinter.CTkComboBox(self, values=liste).pack(pady=(20,20))
         else:
-            customtkinter.CTkComboBox(self, values=["Magasin", "Facturation (Still in Beta may crash)"]).pack(pady=(20,20))
+
+            liste = []
+            
+            if self.master.validation[3]: liste.append("Magasin")
+            if self.master.validation[4]: liste.append("Facturation")
+
+            if len(liste) == 0: liste.append("Aucune module autorisé")
+
+
+            customtkinter.CTkComboBox(self, values=liste).pack(pady=(20,20))
         self.place(relx=0.5,rely=0.5,anchor=tkinter.CENTER)
 
 
@@ -119,7 +139,9 @@ class MainFrame(customtkinter.CTkFrame):
         
         self.commande_type = self.winfo_children()[-1].get()
         
-        
+        if self.commande_type == "Aucune module autorisé":
+            return
+
         for e in self.excel_list:
             if self.master.type=='FOURNISSEUR':
                 if self.commande_type == "Tarif":
@@ -211,8 +233,11 @@ class MainFrame(customtkinter.CTkFrame):
 
 #Main Windows
 class MainWindow(customtkinter.CTk):
-    def __init__(self):
+    def __init__(self, value):
         super().__init__()
+
+        self.validation = value
+
         self.geometry("800x400")
         customtkinter.set_appearance_mode("Dark")
         self.title("EuroFel Utility")
@@ -262,15 +287,25 @@ class MainWindow(customtkinter.CTk):
             self.my_frame.destroy()
             self.my_frame=MainFrame(self)
             return
+        
         if type(self.my_frame) != LaunchFrame:
             return
         self.my_frame.invert_excel_text()
         self.after(1000,self.verify)
-      
 
-App = MainWindow()
-App.mainloop()
+import requests
 
+try:
+    req = requests.get("https://raw.githubusercontent.com/Nocimaa/eurofel_license/main/carrefour_license")
+    print(req.content)
+    bool_val = [val == "True" for val in str(req.content)[2:-1].split('\\n')[:-1]]
+    print(bool_val)
+
+    App = MainWindow(bool_val)
+    App.mainloop()
+except Exception as err:
+    with open("crash.log", "a+") as f:
+        f.write(" ".join(err.args)+"\n")
 
 
 # %%
