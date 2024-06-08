@@ -49,9 +49,9 @@ class Facturation(abstract.Abstract):
 
         if self.entrepot == '175':
             self.generate_tarif()
+            self.generate_tax()
             if self.canal == "R":
                 self.generate_majser()
-            self.generate_tax()
             self.write(Keys.F3)
             self.waiting_system()
             self.write(Keys.F3)

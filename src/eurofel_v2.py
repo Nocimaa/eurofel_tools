@@ -6,6 +6,7 @@
 import tkinter
 import customtkinter
 from PIL import Image
+import selenium.webdriver
 from fournisseur import Fournisseur
 from magasin import Magasin
 from tarif import Tarif
@@ -293,12 +294,13 @@ class MainWindow(customtkinter.CTk):
         self.my_frame.invert_excel_text()
         self.after(1000,self.verify)
 
-import requests
-
+import ssl
+import urllib
+ssl._create_default_https_context = ssl._create_unverified_context
+url = 'https://raw.githubusercontent.com/Nocimaa/eurofel_license/main/carrefour_license'
 try:
-    req = requests.get("https://raw.githubusercontent.com/Nocimaa/eurofel_license/main/carrefour_license")
-    print(req.content)
-    bool_val = [val == "True" for val in str(req.content)[2:-1].split('\\n')[:-1]]
+    req = urllib.request.urlopen(url)
+    bool_val = [val == "True" for val in str(req.read())[2:-1].split('\\n')[:-1]]
     print(bool_val)
 
     App = MainWindow(bool_val)
