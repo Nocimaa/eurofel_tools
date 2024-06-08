@@ -59,8 +59,9 @@ class Facturation(abstract.Abstract):
         
         self.send_quantity()
 
-        self.ordonnancement()
         if self.entrepot == "175":
+            self.ordonnancement()
+
             self.switch_factaccount()
             self.facturation()
 
