@@ -16,7 +16,7 @@ with open("country.json", "r", encoding="utf-8") as file:
 import re
 re_vrac = r" Vrac (\d+,?\d*) k?g | Plateau (\d+,?\d*) k?g | \d+ rang (\d+,?\d*) k?g | Palox (\d+,?\d*) k?g | Mini colis (\d+,?\d*) k?g | Sac (\d+,?\d*) k?g | Mini colis plateau - (\d+,?\d*) k?g "
 match_vrac = re.compile(re_vrac)
-re_pcb = r" Barquettes (\d+)x\d* k?g | Vrac (\d+,?\d*) pcs - \d+,?\d* k?g | - (\d*,?\d*) pcs - \d*,?\d* k?g | Plateau (\d+) pcs - \d+,?\d* k?g | Bottes (\d*)x\d* k?g | Filets (\d+,?\d*)x\d+,?\d* k?g | Sachet (\d+,?\d*)x\d+,?\d* k?g | Girsac (\d+,?\d*)x\d+,?\d* k?g | Mini colis (\d+,?\d*)x\d+,?\d* k?g "
+re_pcb = r" Barquettes (\d+)x\d* k?g | Vrac (\d+,?\d*) pcs - \d+,?\d* k?g | - (\d*,?\d*) pcs - \d*,?\d* k?g | Plateau (\d+) pcs - \d+,?\d* k?g | Bottes (\d*)x\d* k?g | Bottes (\d*) pcs - \d+,?\d* k?g | Filets (\d+,?\d*)x\d+,?\d* k?g | Sachet (\d+,?\d*)x\d+,?\d* k?g | Girsac (\d+,?\d*)x\d+,?\d* k?g | Mini colis (\d+,?\d*)x\d+,?\d* k?g "
 match_pcb = re.compile(re_pcb)
 
 
