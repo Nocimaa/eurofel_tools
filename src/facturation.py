@@ -22,7 +22,7 @@ class Facturation(abstract.Abstract):
         options.add_argument('--ignore-certificate-errors')
         self.geo = zonegeo
         self.browser= webdriver.Chrome(service=self.service,options=options)  
-        self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
+        self.browser.get("https://pace.fr.carrefour.com/eurofel_prdv2/webaccess/")
         self.excel = self.main_excel[self.main_excel['ENTREPOT']==entrepot]
         self.excel = self.excel.sort_values(by=['IFLS'])
         self.action=ActionChains(self.browser)

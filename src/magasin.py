@@ -26,7 +26,7 @@ class Magasin(abstract.Abstract):
         options.add_argument('--ignore-certificate-errors')
         self.browser= webdriver.Chrome(service=self.service,options=options)
         self.browser.minimize_window()
-        self.browser.get("https://pace.fr.carrefour.com/eurofel/webaccess/")
+        self.browser.get("https://pace.fr.carrefour.com/eurofel_prdv2/webaccess/")
         self.main_excel = main_excel
         self.excel = main_excel[main_excel['ENTREPOT']==entrepot]
         self.excel = self.excel.sort_values(by=['MAGASIN','IFLS'])
