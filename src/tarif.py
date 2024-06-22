@@ -7,17 +7,17 @@ import os
 if os.name == 'nt': from subprocess import CREATE_NO_WINDOW
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-
+import math
 import datetime
 import abstract
 #excel=read_excel('carrefour.magasin test.xlsx', sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':str,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
 #%%
 class Tarif(abstract.Abstract):
-    def __init__(self,excel,entrepot):
+    def __init__(self, excel, entrepot, canal):
         
         super().__init__()  
-        self.service=ChromeService()
-        self.service.creation_flags= CREATE_NO_WINDOW
+        self.service = ChromeService()
+        self.service.creation_flags = CREATE_NO_WINDOW
         options = Options()
         options.add_argument('--ignore-ssl-errors=yes')
         options.add_argument('--ignore-certificate-errors')
@@ -31,11 +31,11 @@ class Tarif(abstract.Abstract):
         self.start=False
         self.state=False
 
-        self.entrepot=entrepot
-        self.secteur="12" if entrepot == "175" else "2"
-        self.date=self.excel.iloc[0]['DATE']
-        self.fournisseurs_set=set(self.excel['FOURNISSEUR'])
-
+        self.entrepot = entrepot
+        self.secteur = "12" if entrepot == "175" else "2"
+        self.date = self.excel.iloc[0]['DATE']
+        self.fournisseurs_set = set(self.excel['FOURNISSEUR'])
+        self.canal = canal
         self.pas=len(self.excel)
         self.ps=0
 
@@ -45,9 +45,19 @@ class Tarif(abstract.Abstract):
             date = date+datetime.timedelta(1)
             if date.weekday()==6:            
                 date = date+datetime.timedelta(1)
-            print(date)
             self.date=date.strftime('%d%m%y')
 
+    def get_tax(self, line):
+
+        if (line.iloc[0]['IFLS'] == 'MAJSER'):
+            return 60
+
+        prix = float(line.iloc[0]['PRIX'].replace(",","."))
+
+        if self.canal == "R":
+            return math.floor(1.15 * prix * 100) / 100
+        else:
+            return math.floor(1.144 * prix * 100) / 100
     
     def get_first_imported(self):
         self.waiting_system()
@@ -116,7 +126,12 @@ class Tarif(abstract.Abstract):
         if not self.verif_tarif():
             print("Cannot create tarif for ", ifls)
             self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ko: Aucune commande trouvé concernant cet IFLS'
-            return                
+            return
+
+        if self.entrepot == '175':
+            line = self.get_tax(self.excel[self.excel['IFLS'] == ifls])
+            prix = self.get_tax(line)
+
         self.enter()
         self.waiting_system()
         self.write(Keys.F3)
@@ -128,7 +143,6 @@ class Tarif(abstract.Abstract):
         self.full_process(self.entrepot)
         ite = sorted(list(set(self.excel['IFLS'])))
         for ifls in ite:
-            print(ifls)
             self.tarif(ifls)
         self.browser.close()
         self.main_excel.to_excel('Rapport Tarif.xlsx')

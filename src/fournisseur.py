@@ -135,11 +135,11 @@ class Fournisseur(abstract.Abstract):
     
     def starte(self,df):
         i=0
-        while i<len(df):
-            cur=df.iloc[i]
+        for line in set(df['IFLS']):
+            cur = df[df['IFLS'] == line]
             self.waiting_system()
             self.suppr(6)
-            if int(cur['QUANTITE'])==0:
+            if int(sum(cur['QUANTITE']))==0:
                 i+=1
                 self.ps+=1
                 self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Quantité 0'
@@ -149,10 +149,8 @@ class Fournisseur(abstract.Abstract):
                 #Ecrire Ko
                 self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ko: Prix Zéro'
                 continue  
-            self.ifls_input(cur['IFLS'])
-            if cur['IFLS']==self.get_first_item():
-                pass
-            else:
+            self.ifls_input(line)
+            if line != self.get_first_item():
                 if self.import_ifls(cur['IFLS']):
                     print(f"Cannot import: {self.entrepot} {cur['IFLS']}, {cur['FOURNISSEUR']}")
                     self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ko: Cannot Be imported'
@@ -161,7 +159,7 @@ class Fournisseur(abstract.Abstract):
 
             warning = self.check_warning(cur)
 
-            self.qp_input(str(cur['QUANTITE']),str(cur['PRIX']))
+            self.qp_input(str(sum(cur['QUANTITE'])),str(cur['PRIX']))
             i+=1
             self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ok'
             self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Warning']=warning

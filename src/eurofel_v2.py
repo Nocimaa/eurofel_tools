@@ -111,7 +111,7 @@ class MainFrame(customtkinter.CTkFrame):
         if self.master.type =='FOURNISSEUR':
             liste = []
             if self.master.validation[1]: liste.append("Ferme") ; liste.append("Fictive")
-            if self.master.validation[2]: liste.append("Tarif")
+            if self.master.validation[2]: liste.append("Tarif - Proxy") ; liste.append("Tarif - Hyper")
 
             if len(liste) == 0: liste.append("Aucune module autorisé")
 
@@ -146,7 +146,9 @@ class MainFrame(customtkinter.CTkFrame):
         for e in self.excel_list:
             if self.master.type=='FOURNISSEUR':
                 if self.commande_type == "Tarif":
-                    self.p.append(Tarif(self.master.excel,e[1]))
+                    self.p.append(Tarif(self.master.excel,e[1], "R"))
+                elif self.commande_type == "Tarif - Hyper":
+                    self.p.append(Tarif(self.master.excel,e[1], "0"))
                 else:
                     self.p.append(Fournisseur(self.master.excel,e[1], self.master.geo))
                     self.p[-1].ffi = self.commande_type
