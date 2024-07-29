@@ -214,6 +214,8 @@ class Facturation(abstract.Abstract):
             liste = self.browser.execute_script("return document.getElementsByClassName('NGREEN');")
             self.tab(3)
             for i in range(13):
+                if len(liste) <= 24 + i * 10:
+                    break
                 current = liste[24 + i * 10].text.strip()
                 if not current.isdigit():
                     break
@@ -305,6 +307,8 @@ class Facturation(abstract.Abstract):
         while True:
             liste = self.browser.execute_script("return document.getElementsByClassName('NGREEN');")
             for i in range(13):
+                if len(liste) <= 24 + i * 10:
+                    break
                 current = liste[24 + i * 10].text.strip()
                 if not current.isdigit():
                     break

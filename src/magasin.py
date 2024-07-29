@@ -25,7 +25,10 @@ class Magasin(abstract.Abstract):
         options.add_argument('--ignore-ssl-errors=yes')
         options.add_argument('--ignore-certificate-errors')
         self.browser= webdriver.Chrome(service=self.service,options=options)
-        self.browser.minimize_window()
+        try:
+            self.browser.minimize_window()
+        except:
+            pass
         self.browser.get("https://pace.fr.carrefour.com/eurofel_prdv2/webaccess/")
         self.main_excel = main_excel
         self.excel = main_excel[main_excel['ENTREPOT']==entrepot]
