@@ -142,27 +142,27 @@ class Fournisseur(abstract.Abstract):
             if int(sum(cur['QUANTITE']))==0:
                 i+=1
                 self.ps+=1
-                self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Quantité 0'
+                self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur.iloc[0]['IFLS']),'Status']='Quantité 0'
                 continue  
-            if float(cur['PRIX'].replace(',','.'))==0:
+            if float(cur.iloc[0]['PRIX'].replace(',','.'))==0:
                 i+=1
                 #Ecrire Ko
-                self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ko: Prix Zéro'
+                self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur.iloc[0]['IFLS']),'Status']='Ko: Prix Zéro'
                 continue  
             self.ifls_input(line)
             if line != self.get_first_item():
-                if self.import_ifls(cur['IFLS']):
-                    print(f"Cannot import: {self.entrepot} {cur['IFLS']}, {cur['FOURNISSEUR']}")
-                    self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ko: Cannot Be imported'
+                if self.import_ifls(line):
+                    print(f"Cannot import: {self.entrepot} {line}, {cur.iloc[0]['FOURNISSEUR']}")
+                    self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur.iloc[0]['IFLS']),'Status']='Ko: Cannot Be imported'
                     i+= 1
                     continue
 
-            warning = self.check_warning(cur)
+            warning = self.check_warning(cur.iloc[0])
 
-            self.qp_input(str(sum(cur['QUANTITE'])),str(cur['PRIX']))
+            self.qp_input(str(sum(cur['QUANTITE'])),str(cur.iloc[0]['PRIX']))
             i+=1
-            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Status']='Ok'
-            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur['IFLS']),'Warning']=warning
+            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur.iloc[0]['IFLS']),'Status']='Ok'
+            self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==cur.iloc[0]['IFLS']),'Warning']=warning
             self.ps+=1
     def extract_tuple(self, tuple):
         return list(filter(lambda x : x != None, tuple))[0]

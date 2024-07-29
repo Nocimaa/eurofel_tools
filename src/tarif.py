@@ -27,7 +27,7 @@ class Tarif(abstract.Abstract):
         self.excel = self.main_excel[self.main_excel['ENTREPOT']==entrepot]
         self.excel = self.excel.sort_values(by=['IFLS'])
         self.action=ActionChains(self.browser)
-
+        self.canal = canal
         self.start=False
         self.state=False
 
@@ -35,7 +35,7 @@ class Tarif(abstract.Abstract):
         self.secteur = "12" if entrepot == "175" else "2"
         self.date = self.excel.iloc[0]['DATE']
         self.fournisseurs_set = set(self.excel['FOURNISSEUR'])
-        self.canal = canal
+
         self.pas=len(self.excel)
         self.ps=0
 
@@ -47,17 +47,6 @@ class Tarif(abstract.Abstract):
                 date = date+datetime.timedelta(1)
             self.date=date.strftime('%d%m%y')
 
-    def get_tax(self, line):
-
-        if (line.iloc[0]['IFLS'] == 'MAJSER'):
-            return 60
-
-        prix = float(line.iloc[0]['PRIX'].replace(",","."))
-
-        if self.canal == "R":
-            return math.floor(1.15 * prix * 100) / 100
-        else:
-            return math.floor(1.144 * prix * 100) / 100
     
     def get_first_imported(self):
         self.waiting_system()
@@ -128,10 +117,57 @@ class Tarif(abstract.Abstract):
             self.main_excel.loc[(self.main_excel['ENTREPOT']==self.entrepot)&(self.main_excel['IFLS']==ifls),'Status']='Ko: Aucune commande trouvé concernant cet IFLS'
             return
 
-        if self.entrepot == '175':
-            line = self.get_tax(self.excel[self.excel['IFLS'] == ifls])
-            prix = self.get_tax(line)
+        line = self.excel[self.excel['IFLS'] == ifls].iloc[0]
+        htprix = float(line['PRIX'].replace(",","."))
+        ttcprix = float(line['PC'].replace(",","."))
+        pvcprix = float(str(line['PVC']).replace(",","."))
 
+        if self.canal == 'R':
+            self.tab(7)
+            self.suppr(8)
+            self.write(str(htprix).replace(".", ","))
+            self.enter()
+            
+            self.tab(10)
+            self.suppr(8)
+            self.write(str(ttcprix).replace(".", ","))
+            self.enter()
+
+            self.tab(12)
+            self.suppr(8)
+            self.write(str(pvcprix).replace(".", ","))
+            self.enter()
+        elif self.canal == 'M':
+            self.tab(14)
+            self.suppr(8)
+            self.write(str(htprix).replace(".", ","))
+            self.enter()
+            
+            self.tab(17)
+            self.suppr(8)
+            self.write(str(ttcprix).replace(".", ","))
+            self.enter()
+
+            self.tab(19)
+            self.suppr(8)
+            self.write(str(pvcprix).replace(".", ","))
+            self.enter()
+        else:
+            self.tab(0)
+            self.suppr(8)
+            self.write(str(htprix).replace(".", ","))
+            self.enter()
+            
+            self.tab(3)
+            self.suppr(8)
+            self.write(str(ttcprix).replace(".", ","))
+            self.enter()
+
+            #self.tab(5)
+            #self.suppr(8)
+            #self.write(str(pvcprix).replace(".", ","))
+            #self.enter()
+        time.sleep(1)
         self.enter()
         self.waiting_system()
         self.write(Keys.F3)

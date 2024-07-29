@@ -44,24 +44,13 @@ class Facturation(abstract.Abstract):
         check = self.quantity_check()
         if not check:
             self.stopped = True
-        
-        time.sleep(4)
-
-        if self.entrepot == '175':
-            self.generate_tarif()
-            self.generate_tax()
-            if self.canal == "R":
-                self.generate_majser()
-            self.write(Keys.F3)
-            self.waiting_system()
-            self.write(Keys.F3)
-            self.waiting_system()
-        
+        if self.entrepot == "175" and self.canal == "R":
+            self.generate_majser()
+            
         self.send_quantity()
 
         if self.entrepot == "175":
             self.ordonnancement()
-
             self.switch_factaccount()
             self.facturation()
 
@@ -108,14 +97,12 @@ class Facturation(abstract.Abstract):
         if int(liste[9].text.strip()) != self.pas:
             self.stopped = True
 
-        time.sleep(10)
 
         self.write("T")
 
         self.enter()
         self.waiting_system()
 
-        time.sleep(5)
         for i in range(5):
             self.enter()
 
@@ -127,7 +114,6 @@ class Facturation(abstract.Abstract):
 
         self.write(self.credentials.facturationpass)
         self.enter()
-        time.sleep(5)
         print(self.geo == "Rungis")
         if self.geo == "Rungis":
             self.tab(1)
@@ -135,7 +121,6 @@ class Facturation(abstract.Abstract):
             self.tab(0)
         self.write("1")
         self.enter()
-        time.sleep(3)
         self.enter()
 
         self.menu_11() 
@@ -175,11 +160,9 @@ class Facturation(abstract.Abstract):
             self.write(client)
             self.enter()
             self.tab(8)
-            time.sleep(3)
             self.write("1")
             self.enter()
             self.action.key_down(Keys.SHIFT).send_keys(Keys.F12).key_up(Keys.SHIFT).perform()
-            time.sleep(3)
         self.write(Keys.F3)
 
     def full_process(self,entrepot):
@@ -209,7 +192,6 @@ class Facturation(abstract.Abstract):
         self.enter()
         self.enter()
 
-        time.sleep(5)
         self.enter()
         self.enter()
         self.write(Keys.F3)
@@ -256,6 +238,13 @@ class Facturation(abstract.Abstract):
         self.waiting_system()
         
     def generate_majser(self):
+
+        self.write("01")
+        self.waiting_system()
+
+        self.write("01")
+        self.waiting_system()
+
         self.write("09")
         self.waiting_system()
 
@@ -272,11 +261,10 @@ class Facturation(abstract.Abstract):
         self.suppr(10)
         self.write("60,00")
         self.enter()
-        time.sleep(1.5)
-        self.write(Keys.F3)
-        self.waiting_system()
-        self.write(Keys.F3)
-        self.waiting_system()
+
+        for i in range(4):
+            self.write(Keys.F3)
+            self.waiting_system()
 
     def generate_tarif(self):
         self.write("01")
@@ -297,7 +285,6 @@ class Facturation(abstract.Abstract):
         self.waiting_system()
         self.enter()
         self.waiting_system()
-        time.sleep(7)
         self.enter()
         self.waiting_system()
         self.enter()

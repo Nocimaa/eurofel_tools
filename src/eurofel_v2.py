@@ -111,7 +111,7 @@ class MainFrame(customtkinter.CTkFrame):
         if self.master.type =='FOURNISSEUR':
             liste = []
             if self.master.validation[1]: liste.append("Ferme") ; liste.append("Fictive")
-            if self.master.validation[2]: liste.append("Tarif - Proxy") ; liste.append("Tarif - Hyper")
+            if self.master.validation[2]: liste.append("Tarif - Hyper / Dépannage") ;  liste.append("Tarif - Proxy") ;  liste.append("Tarif - Market")
 
             if len(liste) == 0: liste.append("Aucune module autorisé")
 
@@ -145,9 +145,11 @@ class MainFrame(customtkinter.CTkFrame):
 
         for e in self.excel_list:
             if self.master.type=='FOURNISSEUR':
-                if self.commande_type == "Tarif":
+                if self.commande_type == "Tarif - Proxy":
                     self.p.append(Tarif(self.master.excel,e[1], "R"))
-                elif self.commande_type == "Tarif - Hyper":
+                elif self.commande_type == "Tarif - Market":
+                    self.p.append(Tarif(self.master.excel,e[1], "M"))
+                elif self.commande_type == "Tarif - Hyper / Dépannage":
                     self.p.append(Tarif(self.master.excel,e[1], "0"))
                 else:
                     self.p.append(Fournisseur(self.master.excel,e[1], self.master.geo))
@@ -265,7 +267,7 @@ class MainWindow(customtkinter.CTk):
     def loadExcel(self):
         try:self.file=tkinter.filedialog.askopenfile(title="Select excel file",initialdir='./',filetypes=(("Excel files", ".xlsx .xls"),))
         except: return
-        try:self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':int,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str})
+        try:self.excel=read_excel(self.file.name, sheet_name=0,converters={'IFLS':str,'ENTREPOT':str,'CODE FOURNISSEUR':str,'PRIX':str,'QUANTITE':int,'FOURNISSEUR':str,'DATE':str,'JOUR':str,'CANAL':str,'MAGASIN':str, 'PC':str, 'PVC':str})
         except: return
         try:
             self.excel['DATE']
