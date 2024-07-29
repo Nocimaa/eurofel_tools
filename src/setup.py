@@ -3,7 +3,7 @@ import os
 import sys
 from cx_Freeze import setup,Executable
 
-relative_path="C:/Users/ElisabethRibeiro/Documents/GitHub/eurofel_tools/src/"
+relative_path="C:/Users/DiogoCampos/OneDrive - PDM Meyer champi/Documents/eurofel_tools/src/"
 
 python_install = os.path.dirname(sys.executable)
 
